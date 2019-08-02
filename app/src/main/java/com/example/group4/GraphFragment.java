@@ -4,7 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,13 +29,17 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private View view;
     private GraphView graph;
     private Button start, stop;
-    private LineGraphSeries<DataPoint> series;
+    private LineGraphSeries<DataPoint> seriesX, seriesY, seriesZ;
     private int count=1;
 
 	//create random, thread handler, and thread toggle boolean
     private Random rand;
     boolean running;
     private Handler handler;
+
+    Intent sersorIntent;
+
+    SQLiteDatabase db;
 
 	//create graph fragment view
     @Override
@@ -49,15 +56,22 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         stop.setOnClickListener((View.OnClickListener) this);
 
 		//create new data series
-        series = new LineGraphSeries<>();
+        seriesX = new LineGraphSeries<>();
+        seriesY = new LineGraphSeries<>();
+        seriesZ = new LineGraphSeries<>();
+
+        seriesX.setColor(Color.RED);
+        seriesY.setColor(Color.GREEN);
+        seriesZ.setColor(Color.BLUE);
 
 		//create new random, handler, set thread toggle to false.
         rand = new Random();
         running = false;
         handler = new Handler();
 
+        sersorIntent = new Intent(getActivity(), sensorHandler.class);
+
 		//add data series to graph, set axis bounds and labels.
-        graph.addSeries(series);
         graph.getViewport().setXAxisBoundsManual(true);
         graph.getViewport().setMinX(0);
         graph.getViewport().setMaxX(40);
@@ -95,13 +109,17 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             Log.i("info", "start");
             if(running) return;
             running=true;
-            graph.addSeries(series);
-            handler.post(generateData);
+            graph.addSeries(seriesX);
+            graph.addSeries(seriesY);
+            graph.addSeries(seriesZ);
+            getActivity().startService(sersorIntent);
+            //handler.post(generateData);
         }else if(v.getId()== R.id.btn_stop){
             Log.i("info", "stop");
             if(!running) return;
             running=false;
-            handler.removeCallbacksAndMessages(null);
+            //handler.removeCallbacksAndMessages(null);
+            getActivity().stopService(sersorIntent);
             graph.removeAllSeries();
         }
     }
@@ -125,7 +143,9 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 
             String[] vals = msg.split(" ");
             Log.i("info"," receive data "+ Arrays.toString(vals));
-            series.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
+            seriesX.appendData(new DataPoint(count+1, Float.parseFloat(vals[0])), true, 40);
+            seriesY.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
+            seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(vals[2])), true, 40);
             count++;
         }
     };

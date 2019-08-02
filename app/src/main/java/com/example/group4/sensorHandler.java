@@ -234,9 +234,6 @@ public class sensorHandler extends Service implements SensorEventListener{
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        b = intent.getExtras();
-        String phoneNumber = b.getString("phone");
-        Toast.makeText(sensorHandler.this, phoneNumber, Toast.LENGTH_LONG).show();
         // We want this service to continue running until it is explicitly
         // stopped, so return sticky.
         //k = 0;

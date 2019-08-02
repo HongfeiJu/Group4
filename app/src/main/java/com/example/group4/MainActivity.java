@@ -2,8 +2,9 @@ package com.example.group4;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
@@ -13,11 +14,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.i("info", "main activity start");
-        Intent startSenseService = new Intent(MainActivity.this, sensorHandler.class);
-        Bundle b = new Bundle();
-        b.putString("phone", "1234");
-        startSenseService.putExtras(b);
-        startService(startSenseService);
     }
 
 }
