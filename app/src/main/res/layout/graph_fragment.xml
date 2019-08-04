@@ -93,17 +93,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/editText3" />
 
-    <com.jjoe64.graphview.GraphView
+    <com.androidplot.xy.XYPlot
         android:id="@+id/graph"
-        android:layout_width="352dp"
-        android:layout_height="283dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="8dp"
+        style="@style/APDefacto.Dark"
+        android:layout_width="409dp"
+        android:layout_height="547dp"
         android:layout_marginTop="184dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.627"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:domainTitle="domain"
+        app:layout_constraintTop_toTopOf="parent"
+        app:lineLabelRotationBottom="-45"
+        app:lineLabels="left|bottom"
+        app:rangeTitle="range"
+        app:title="A Simple XY Plot"
+        tools:layout_editor_absoluteX="1dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
