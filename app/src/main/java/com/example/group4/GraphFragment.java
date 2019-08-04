@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
@@ -14,6 +16,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
@@ -23,14 +28,17 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 public class GraphFragment extends Fragment implements View.OnClickListener {
 	//define View, graph, local variables
     private View view;
     private GraphView graph;
-    private Button start, stop;
+    private Button start, stop, upload, download;
     private LineGraphSeries<DataPoint> seriesX, seriesY, seriesZ;
     private int count=1;
+    private EditText patientID, age, patientName;
+    private RadioGroup sex;
 
 	//create random, thread handler, and thread toggle boolean
     private Random rand;
@@ -50,10 +58,18 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph = (GraphView) view.findViewById(R.id.graph);
         start = (Button) view.findViewById(R.id.btn_start);
         stop = (Button) view.findViewById(R.id.btn_stop);
+        upload = (Button) view.findViewById(R.id.btn_upload);
+        download = (Button) view.findViewById(R.id.btn_download);
+        patientID = (EditText)  view.findViewById(R.id.PatientID);
+        age = (EditText) view.findViewById(R.id.age);
+        patientName = (EditText) view.findViewById(R.id.patient_name);
+        sex = (RadioGroup)  view.findViewById(R.id.sexes);
 
-		//create listeners for start and stop
+        //create listeners for start and stop
         start.setOnClickListener((View.OnClickListener) this);
         stop.setOnClickListener((View.OnClickListener) this);
+        upload.setOnClickListener((View.OnClickListener) this);
+        download.setOnClickListener((View.OnClickListener) this);
 
 		//create new data series
         seriesX = new LineGraphSeries<>();
@@ -78,10 +94,13 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.getGridLabelRenderer().setHorizontalAxisTitle("Series Index");
         graph.getGridLabelRenderer().setVerticalAxisTitle("Random Values");
 
+        //create database if not exist
+        db = SQLiteDatabase.openOrCreateDatabase(Environment.getExternalStorageDirectory()+"/Database/group4", null);
+
         return view;
     }
 
-	//use super class onResume and onPause
+    //use super class onResume and onPause
     @Override
     public void onResume() {
         super.onResume();
@@ -106,35 +125,121 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if(v.getId()== R.id.btn_start){
+
             Log.i("info", "start");
             if(running) return;
             running=true;
             graph.addSeries(seriesX);
             graph.addSeries(seriesY);
             graph.addSeries(seriesZ);
+            createTable();
             getActivity().startService(sersorIntent);
-            //handler.post(generateData);
+
         }else if(v.getId()== R.id.btn_stop){
+
             Log.i("info", "stop");
             if(!running) return;
             running=false;
-            //handler.removeCallbacksAndMessages(null);
             getActivity().stopService(sersorIntent);
             graph.removeAllSeries();
+
+        }else if(v.getId() == R.id.btn_upload){
+
+            Log.i("info", "upload");
+            uploadDatabase();
+
+        }else if(v.getId() == R.id.btn_download){
+
+            Log.i("info", "download");
+            downloadDatabase();
+
         }
     }
 
-	/*generateData thread.  run() updates log, adds a new data point to the 
-	data series, updates index and waits 0.5 secs before posting generateData
-	to the message queue*/
-    Runnable generateData = new Runnable() {
-        @Override
-        public void run() {
-            Log.d("info", "generating data");
+    private void createTable() {
+        db.beginTransaction();
+        try {
+            //perform your database operations here ...
+            String tableName = getTable();
+            Log.i("info", "create table "+tableName);
 
-            handler.postDelayed(generateData, 500);
+            db.execSQL("create table if not exists " + tableName + " ("
+                    + " time integer, "
+                    + " x float, "
+                    + " y float, "
+                    + " z float ); " );
+
+            db.setTransactionSuccessful(); //commit your changes
+        }catch (SQLiteException e) {
+            //report problem
+        }finally {
+            db.endTransaction();
         }
-    };
+    }
+
+    private String getTable() {
+        String id = patientID.getText().toString(),
+                a = age.getText().toString(),
+                name = patientName.getText().toString(), s="";
+        int checkedID = sex.getCheckedRadioButtonId();
+        if(checkedID == R.id.male) s = "male";
+        else if(checkedID == R.id.female) s = "female";
+        return name+"_"+id+"_"+a+"_"+s;
+    }
+
+    private void uploadDatabase() {
+        new UploadTask().execute();
+    }
+
+    private void downloadDatabase(){
+        /*
+        try {
+
+            String res = new DownloadTask().execute().get();
+            if(res.equals("completed")){
+
+            }
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        */
+
+        //declare data series for downloaded data
+        LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
+        tempSeriesX = new LineGraphSeries<>();
+        tempSeriesY = new LineGraphSeries<>();
+        tempSeriesZ = new LineGraphSeries<>();
+
+        tempSeriesX.setColor(Color.RED);
+        tempSeriesY.setColor(Color.GREEN);
+        tempSeriesZ.setColor(Color.BLUE);
+
+        //read downloaded database file
+        SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
+                Environment.getExternalStorageDirectory()+"/Database/group4", null);
+
+        //get the last ten row
+        Cursor res = tempdb.rawQuery( "select * from " + getTable()
+                + " order by time desc limit 10", null );
+
+        //put data into the series
+        res.moveToLast();
+        int count = 10;
+        while(res.isBeforeFirst() == false && count>0) {
+            int time = res.getInt(res.getColumnIndex("time"));
+            tempSeriesX.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("x"))), true, 40);
+            tempSeriesY.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("y"))), true, 40);
+            tempSeriesZ.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("z"))), true, 40);
+            res.moveToPrevious();
+            count--;
+        }
+        graph.removeAllSeries();
+        graph.addSeries(tempSeriesX);
+        graph.addSeries(tempSeriesY);
+        graph.addSeries(tempSeriesZ);
+    }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -146,7 +251,29 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             seriesX.appendData(new DataPoint(count+1, Float.parseFloat(vals[0])), true, 40);
             seriesY.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
             seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(vals[2])), true, 40);
+
+            //insert data to database
+            insertRow(count+1, Float.parseFloat(vals[0]), Float.parseFloat(vals[1]), Float.parseFloat(vals[2]));
             count++;
         }
     };
+
+    private void insertRow(int time, float x, float y, float z){
+        db.beginTransaction();
+        try {
+            //perform your database operations here ...
+            String tableName = getTable();
+            Log.i("info", "insert row");
+            db.execSQL("insert into " + tableName + " (time, x, y, z) values ("
+                    + count + ", " + x + ", " + y + ", " + z + ")");
+            db.setTransactionSuccessful(); //commit your changes
+        }catch (SQLiteException e) {
+            //report problem
+        }finally {
+            db.endTransaction();
+        }
+    }
+
+
+
 }
