@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.fragment.app.Fragment;
+import androidx.room.Room;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -33,8 +34,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private int count=1;
 
 	//create random, thread handler, and thread toggle boolean
-    private Random rand;
-    boolean running;
+    private boolean running;
     private Handler handler;
 
     Intent sersorIntent;
@@ -65,11 +65,16 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         seriesZ.setColor(Color.BLUE);
 
 		//create new random, handler, set thread toggle to false.
-        rand = new Random();
         running = false;
         handler = new Handler();
 
+        //create sensor handle for acc
         sersorIntent = new Intent(getActivity(), sensorHandler.class);
+
+        //create new database
+        Context context = getActivity().getApplicationContext();
+        PatientDatabase db = Room.databaseBuilder(context, PatientDatabase.class,
+                "patient_database").build();
 
 		//add data series to graph, set axis bounds and labels.
         graph.getViewport().setXAxisBoundsManual(true);
