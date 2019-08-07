@@ -1,6 +1,7 @@
 package com.example.group4;
 
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.util.Log;
 
 import java.io.DataOutputStream;
@@ -15,7 +16,7 @@ public class UploadTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... strings) {
         try {
             Log.i("info", "start upload task");
-            String sourceFileUri = "/sdcard/Database/group4";
+            String sourceFileUri = Environment.getExternalStorageDirectory() + "/Pictures/Hangouts/test.jpg";
 
             HttpURLConnection connection = null;
             DataOutputStream outputStream = null;
@@ -30,7 +31,7 @@ public class UploadTask extends AsyncTask<String, Void, String> {
             if (sourceFile.isFile()) {
 
                 try {
-                    String upLoadServerUri = "http://impact.asu.edu/CSE535Spring19Folder/UploadToServer.php";
+                    String upLoadServerUri = "http://10.10.1.112/UploadToServer.php";
 
                     // open a URL connection to the Servlet
                     FileInputStream fileInputStream = new FileInputStream(
@@ -53,7 +54,7 @@ public class UploadTask extends AsyncTask<String, Void, String> {
                     outputStream = new DataOutputStream(connection.getOutputStream());
 
                     outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-                    outputStream.writeBytes("Content-Disposition: form-data; name=\"bill\";filename=\""
+                    outputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""
                             + sourceFileUri + "\"" + lineEnd);
 
                     outputStream.writeBytes(lineEnd);

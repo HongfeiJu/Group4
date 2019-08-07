@@ -95,7 +95,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.getGridLabelRenderer().setVerticalAxisTitle("Random Values");
 
         //create database if not exist
-        db = SQLiteDatabase.openOrCreateDatabase(Environment.getExternalStorageDirectory()+"/Database/group4", null);
+        //db = SQLiteDatabase.openOrCreateDatabase(Environment.getExternalStorageDirectory()+"/Database/group4", null);
 
         return view;
     }
@@ -192,6 +192,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     }
 
     private void downloadDatabase(){
+        new DownloadTask().execute();
         /*
         try {
 
@@ -207,38 +208,38 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         */
 
         //declare data series for downloaded data
-        LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
-        tempSeriesX = new LineGraphSeries<>();
-        tempSeriesY = new LineGraphSeries<>();
-        tempSeriesZ = new LineGraphSeries<>();
-
-        tempSeriesX.setColor(Color.RED);
-        tempSeriesY.setColor(Color.GREEN);
-        tempSeriesZ.setColor(Color.BLUE);
-
-        //read downloaded database file
-        SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
-                Environment.getExternalStorageDirectory()+"/Database/group4", null);
-
-        //get the last ten row
-        Cursor res = tempdb.rawQuery( "select * from " + getTable()
-                + " order by time desc limit 10", null );
-
-        //put data into the series
-        res.moveToLast();
-        int count = 10;
-        while(res.isBeforeFirst() == false && count>0) {
-            int time = res.getInt(res.getColumnIndex("time"));
-            tempSeriesX.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("x"))), true, 40);
-            tempSeriesY.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("y"))), true, 40);
-            tempSeriesZ.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("z"))), true, 40);
-            res.moveToPrevious();
-            count--;
-        }
-        graph.removeAllSeries();
-        graph.addSeries(tempSeriesX);
-        graph.addSeries(tempSeriesY);
-        graph.addSeries(tempSeriesZ);
+//        LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
+//        tempSeriesX = new LineGraphSeries<>();
+//        tempSeriesY = new LineGraphSeries<>();
+//        tempSeriesZ = new LineGraphSeries<>();
+//
+//        tempSeriesX.setColor(Color.RED);
+//        tempSeriesY.setColor(Color.GREEN);
+//        tempSeriesZ.setColor(Color.BLUE);
+//
+//        //read downloaded database file
+//        SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
+//                Environment.getExternalStorageDirectory()+"/Database/group4", null);
+//
+//        //get the last ten row
+//        Cursor res = tempdb.rawQuery( "select * from " + getTable()
+//                + " order by time desc limit 10", null );
+//
+//        //put data into the series
+//        res.moveToLast();
+//        int count = 10;
+//        while(res.isBeforeFirst() == false && count>0) {
+//            int time = res.getInt(res.getColumnIndex("time"));
+//            tempSeriesX.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("x"))), true, 40);
+//            tempSeriesY.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("y"))), true, 40);
+//            tempSeriesZ.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("z"))), true, 40);
+//            res.moveToPrevious();
+//            count--;
+//        }
+//        graph.removeAllSeries();
+//        graph.addSeries(tempSeriesX);
+//        graph.addSeries(tempSeriesY);
+//        graph.addSeries(tempSeriesZ);
     }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

@@ -19,7 +19,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
     protected String doInBackground(String... strings) {
         try{
             Log.i("info", "start connection");
-            URL url = new URL("https://tomcat.apache.org/tomcat-7.0-doc/appdev/sample/sample.war");
+            URL url = new URL("http://10.10.1.112/uploads/hello.txt");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.connect();
             Log.i("info", connection.getResponseMessage());
@@ -32,7 +32,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
 
             Log.i("info", Environment.getExternalStorageDirectory().getPath());
             InputStream input = connection.getInputStream();
-            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/Database/sample.war");
+            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + "/Pictures/hello.txt");
 
             byte data[] = new byte[4096];
             long total = 0;
