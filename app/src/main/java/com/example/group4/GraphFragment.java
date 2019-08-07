@@ -192,20 +192,20 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     }
 
     private void downloadDatabase(){
-        /*
-        try {
 
+        try {
             String res = new DownloadTask().execute().get();
             if(res.equals("completed")){
-
+                showLastTenRows();
             }
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        */
+    }
 
+    private void showLastTenRows(){
         //declare data series for downloaded data
         LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
         tempSeriesX = new LineGraphSeries<>();
@@ -218,7 +218,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 
         //read downloaded database file
         SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
-                Environment.getExternalStorageDirectory()+"/Database/group4", null);
+                Environment.getExternalStorageDirectory()+"/Database/group4_download", null);
 
         //get the last ten row
         Cursor res = tempdb.rawQuery( "select * from " + getTable()

@@ -30,7 +30,7 @@ public class UploadTask extends AsyncTask<String, Void, String> {
             if (sourceFile.isFile()) {
 
                 try {
-                    String upLoadServerUri = "http://impact.asu.edu/CSE535Spring19Folder/UploadToServer.php";
+                    String upLoadServerUri = "http://ec2-174-129-110-220.compute-1.amazonaws.com/UploadToServer.php";
 
                     // open a URL connection to the Servlet
                     FileInputStream fileInputStream = new FileInputStream(
@@ -68,7 +68,7 @@ public class UploadTask extends AsyncTask<String, Void, String> {
                     bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 
                     while (bytesRead > 0) {
-
+                        Log.i("info", Integer.toString(bytesRead));
                         outputStream.write(buffer, 0, bufferSize);
                         bytesAvailable = fileInputStream.available();
                         bufferSize = Math
@@ -84,6 +84,11 @@ public class UploadTask extends AsyncTask<String, Void, String> {
                     outputStream.writeBytes(twoHyphens + boundary + twoHyphens
                             + lineEnd);
 
+                    // close the streams //
+                    fileInputStream.close();
+                    outputStream.flush();
+                    outputStream.close();
+
                     // Responses from the server (code and message)
                     int serverResponseCode = connection.getResponseCode();
                     String serverResponseMessage = connection
@@ -93,11 +98,6 @@ public class UploadTask extends AsyncTask<String, Void, String> {
                     if (serverResponseCode == 200) {
                         Log.i("info", "File Upload Complete.");
                     }
-
-                    // close the streams //
-                    fileInputStream.close();
-                    outputStream.flush();
-                    outputStream.close();
 
                 } catch (Exception e) {
 

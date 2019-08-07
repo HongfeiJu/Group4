@@ -19,7 +19,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
     protected String doInBackground(String... strings) {
         try{
             Log.i("info", "start connection");
-            URL url = new URL("https://tomcat.apache.org/tomcat-7.0-doc/appdev/sample/sample.war");
+            URL url = new URL("http://ec2-174-129-110-220.compute-1.amazonaws.com/uploads/group4");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.connect();
             Log.i("info", connection.getResponseMessage());
@@ -32,7 +32,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
 
             Log.i("info", Environment.getExternalStorageDirectory().getPath());
             InputStream input = connection.getInputStream();
-            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/Database/sample.war");
+            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/Database/group4_download");
 
             byte data[] = new byte[4096];
             long total = 0;
@@ -48,7 +48,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
                     publishProgress((int) (total * 100 / fileLength));
                 output.write(data, 0, count);
             }
-
+            Log.i("info", "File Download Completed");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
