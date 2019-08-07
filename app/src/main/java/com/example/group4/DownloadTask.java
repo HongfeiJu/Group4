@@ -19,7 +19,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
     protected String doInBackground(String... strings) {
         try{
             Log.i("info", "start connection");
-            URL url = new URL("http://10.10.1.112/uploads/hello.txt");
+            URL url = new URL("http://ec2-174-129-110-220.compute-1.amazonaws.com/UploadToServer.php");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.connect();
             Log.i("info", connection.getResponseMessage());
@@ -32,7 +32,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
 
             Log.i("info", Environment.getExternalStorageDirectory().getPath());
             InputStream input = connection.getInputStream();
-            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + "/Pictures/hello.txt");
+            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + "/Documents/group4");
 
             byte data[] = new byte[4096];
             long total = 0;

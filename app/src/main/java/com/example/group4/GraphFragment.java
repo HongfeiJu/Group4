@@ -95,7 +95,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.getGridLabelRenderer().setVerticalAxisTitle("Random Values");
 
         //create database if not exist
-        //db = SQLiteDatabase.openOrCreateDatabase(Environment.getExternalStorageDirectory()+"/Database/group4", null);
+        db = SQLiteDatabase.openOrCreateDatabase(Environment.getExternalStorageDirectory()+"/Documents/group4", null);
 
         return view;
     }
