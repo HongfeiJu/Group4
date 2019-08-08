@@ -36,7 +36,6 @@ public class sensorHandler extends Service implements SensorEventListener{
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        // TODO Auto-generated method stub
         Sensor mySensor = sensorEvent.sensor;
 
         if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -55,15 +54,12 @@ public class sensorHandler extends Service implements SensorEventListener{
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // TODO Auto-generated method stub
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 
     @Override
     public void onCreate(){
         Log.i("info", "sensor service start");
-        Toast.makeText(this, "Service Started", Toast.LENGTH_LONG).show();
+
         accelManage = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senseAccel = accelManage.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         accelManage.registerListener(this, senseAccel, SensorManager.SENSOR_DELAY_NORMAL);
@@ -74,18 +70,14 @@ public class sensorHandler extends Service implements SensorEventListener{
         handler.post(sendData);
 
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
-        //k = 0;
         return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO Auto-generated method stub
-
         return null;
     }
 

@@ -41,9 +41,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private RadioGroup sex;
 
 	//create random, thread handler, and thread toggle boolean
-    private Random rand;
     boolean running;
-    private Handler handler;
 
     Intent sersorIntent;
 
@@ -71,20 +69,18 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         upload.setOnClickListener((View.OnClickListener) this);
         download.setOnClickListener((View.OnClickListener) this);
 
-		//create new data series
+		//create new data series and set the colors
         seriesX = new LineGraphSeries<>();
         seriesY = new LineGraphSeries<>();
         seriesZ = new LineGraphSeries<>();
-
         seriesX.setColor(Color.RED);
         seriesY.setColor(Color.GREEN);
         seriesZ.setColor(Color.BLUE);
 
 		//create new random, handler, set thread toggle to false.
-        rand = new Random();
         running = false;
-        handler = new Handler();
 
+        //initialize accelerometer senor
         sersorIntent = new Intent(getActivity(), sensorHandler.class);
 
 		//add data series to graph, set axis bounds and labels.
@@ -95,7 +91,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.getGridLabelRenderer().setVerticalAxisTitle("Random Values");
 
         //create database if not exist
-        db = SQLiteDatabase.openOrCreateDatabase(Environment.getExternalStorageDirectory()+"/Documents/group4", null);
+        db = SQLiteDatabase.openOrCreateDatabase("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4", null);
 
         return view;
     }
@@ -120,7 +116,11 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 	If a click on stop, check for running thread, stop if running
 	and remove data series from graph (clears graph) and clear
 	message queue.
-
+    If a click on upload, start an async upload task which will upload
+    the file "group4" and "group4-journal" to the server.
+    if a click on download, start an async download task which will download
+    the files from the server and save as "group4_download" and
+    "group4_download-journal".
 	onClick ignores redundant clicks.*/
     @Override
     public void onClick(View v) {
@@ -156,11 +156,11 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    //create the table based on the user input
     private void createTable() {
         db.beginTransaction();
         try {
-            //perform your database operations here ...
-            String tableName = getTable();
+            String tableName = getTableName();
             Log.i("info", "create table "+tableName);
 
             db.execSQL("create table if not exists " + tableName + " ("
@@ -177,7 +177,8 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private String getTable() {
+    //generate the table name based on the user input
+    private String getTableName() {
         String id = patientID.getText().toString(),
                 a = age.getText().toString(),
                 name = patientName.getText().toString(), s="";
@@ -187,61 +188,27 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         return name+"_"+id+"_"+a+"_"+s;
     }
 
+    //execute the upload tasks
     private void uploadDatabase() {
-        new UploadTask().execute();
+        new UploadTask().execute("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4");
+        new UploadTask().execute("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4-journal");
     }
 
+    //execute the download task and show the last ten data set
     private void downloadDatabase(){
-        new DownloadTask().execute();
-        /*
         try {
-
-            String res = new DownloadTask().execute().get();
+            String res = new DownloadTask().execute("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4_download").get();
             if(res.equals("completed")){
-
+                showLastTenRow();
             }
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        */
-
-        //declare data series for downloaded data
-//        LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
-//        tempSeriesX = new LineGraphSeries<>();
-//        tempSeriesY = new LineGraphSeries<>();
-//        tempSeriesZ = new LineGraphSeries<>();
-//
-//        tempSeriesX.setColor(Color.RED);
-//        tempSeriesY.setColor(Color.GREEN);
-//        tempSeriesZ.setColor(Color.BLUE);
-//
-//        //read downloaded database file
-//        SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
-//                Environment.getExternalStorageDirectory()+"/Database/group4", null);
-//
-//        //get the last ten row
-//        Cursor res = tempdb.rawQuery( "select * from " + getTable()
-//                + " order by time desc limit 10", null );
-//
-//        //put data into the series
-//        res.moveToLast();
-//        int count = 10;
-//        while(res.isBeforeFirst() == false && count>0) {
-//            int time = res.getInt(res.getColumnIndex("time"));
-//            tempSeriesX.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("x"))), true, 40);
-//            tempSeriesY.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("y"))), true, 40);
-//            tempSeriesZ.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("z"))), true, 40);
-//            res.moveToPrevious();
-//            count--;
-//        }
-//        graph.removeAllSeries();
-//        graph.addSeries(tempSeriesX);
-//        graph.addSeries(tempSeriesY);
-//        graph.addSeries(tempSeriesZ);
     }
 
+    //receive data from the accelerometer service
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -259,11 +226,12 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         }
     };
 
+    //insert the new data into the table
     private void insertRow(int time, float x, float y, float z){
         db.beginTransaction();
         try {
             //perform your database operations here ...
-            String tableName = getTable();
+            String tableName = getTableName();
             Log.i("info", "insert row");
             db.execSQL("insert into " + tableName + " (time, x, y, z) values ("
                     + count + ", " + x + ", " + y + ", " + z + ")");
@@ -275,6 +243,42 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    //extract the last ten row from the database and show them on the graph
+    private void showLastTenRow(){
 
+        //declare data series for downloaded data
+        LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
+        tempSeriesX = new LineGraphSeries<>();
+        tempSeriesY = new LineGraphSeries<>();
+        tempSeriesZ = new LineGraphSeries<>();
+
+        tempSeriesX.setColor(Color.RED);
+        tempSeriesY.setColor(Color.GREEN);
+        tempSeriesZ.setColor(Color.BLUE);
+
+        //read downloaded database file
+        SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
+                "/sdcard/Android/data/CSE535_ASSIGNMENT2/group4_download", null);
+
+        //get the last ten row
+        Cursor res = tempdb.rawQuery( "select * from " + getTableName()
+                + " order by time desc limit 10", null );
+
+        //put data into the series
+        res.moveToLast();
+        int count = 10;
+        while(res.isBeforeFirst() == false && count>0) {
+            int time = res.getInt(res.getColumnIndex("time"));
+            tempSeriesX.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("x"))), true, 40);
+            tempSeriesY.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("y"))), true, 40);
+            tempSeriesZ.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("z"))), true, 40);
+            res.moveToPrevious();
+            count--;
+        }
+        graph.removeAllSeries();
+        graph.addSeries(tempSeriesX);
+        graph.addSeries(tempSeriesY);
+        graph.addSeries(tempSeriesZ);
+    }
 
 }

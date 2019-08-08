@@ -1,13 +1,10 @@
 package com.example.group4;
 
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -21,8 +18,7 @@ public class UploadTask extends AsyncTask<String, Void, Void> {
     @Override
     protected Void doInBackground(String... strings) {
         Log.i("info", "start upload task");
-        String sourceFileUri = Environment.getExternalStorageDirectory() + "/Documents/group4";
-        //String serverURL = "http://10.10.1.112/UploadToServer.php";
+        String sourceFileUri = strings[0];
         String serverURL = "http://ec2-174-129-110-220.compute-1.amazonaws.com/UploadToServer.php";
         final MediaType MEDIA_TYPE = MediaType.parse("multipart/form-data");
 

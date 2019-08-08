@@ -1,7 +1,6 @@
 package com.example.group4;
 
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.FileOutputStream;
@@ -18,21 +17,21 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
     @Override
     protected String doInBackground(String... strings) {
         try{
+            //connect to the server
             Log.i("info", "start connection");
-            URL url = new URL("http://ec2-174-129-110-220.compute-1.amazonaws.com/UploadToServer.php");
+            URL url = new URL("http://ec2-174-129-110-220.compute-1.amazonaws.com/uploads/group4");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.connect();
-            Log.i("info", connection.getResponseMessage());
 
+            //check connection
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 return "Server returned HTTP " + connection.getResponseCode() + " " + connection.getResponseMessage();
             }
-
             int fileLength = connection.getContentLength();
 
-            Log.i("info", Environment.getExternalStorageDirectory().getPath());
+            //transfer data
             InputStream input = connection.getInputStream();
-            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + "/Documents/group4");
+            OutputStream output = new FileOutputStream(strings[0]);
 
             byte data[] = new byte[4096];
             long total = 0;
@@ -43,8 +42,7 @@ public class DownloadTask extends AsyncTask<String, Integer, String> {
                     return "cancelled";
                 }
                 total += count;
-                // publishing the progress....
-                if (fileLength > 0) // only if total length is known
+                if (fileLength > 0)
                     publishProgress((int) (total * 100 / fileLength));
                 output.write(data, 0, count);
             }
