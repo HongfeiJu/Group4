@@ -4,13 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,26 +23,29 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
 
 public class GraphFragment extends Fragment implements View.OnClickListener {
 	//define View, graph, local variables
     private View view;
     private GraphView graph;
-    private Button start, stop, upload, download;
+    private Button copCollect, copAlgo, hungryCollect, hungryAlgo, headacheCollect,
+    headacheAlgo, aboutCollect, aboutAlgo;
+    private TextView result;
     private LineGraphSeries<DataPoint> seriesX, seriesY, seriesZ;
     private int count=1;
-    private EditText patientID, age, patientName;
-    private RadioGroup sex;
+    private List<float[]> dynamicData;
+    private List<List<float[]>> copData, hungryData, headacheData, aboutData;
+    private TextToSpeech textToSpeech;
 
 	//create random, thread handler, and thread toggle boolean
     boolean running;
 
     Intent sersorIntent;
-
-    SQLiteDatabase db;
 
 	//create graph fragment view
     @Override
@@ -54,20 +54,25 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 		//initialize graph, start and stop buttons
         view = inflater.inflate(R.layout.graph_fragment, container, false);
         graph = (GraphView) view.findViewById(R.id.graph);
-        start = (Button) view.findViewById(R.id.btn_start);
-        stop = (Button) view.findViewById(R.id.btn_stop);
-        upload = (Button) view.findViewById(R.id.btn_upload);
-        download = (Button) view.findViewById(R.id.btn_download);
-        patientID = (EditText)  view.findViewById(R.id.PatientID);
-        age = (EditText) view.findViewById(R.id.age);
-        patientName = (EditText) view.findViewById(R.id.patient_name);
-        sex = (RadioGroup)  view.findViewById(R.id.sexes);
+        copCollect = (Button) view.findViewById(R.id.btn_cop_collect);
+        copAlgo = (Button) view.findViewById(R.id.btn_cop_algo);
+        hungryCollect = (Button) view.findViewById(R.id.btn_hungry_collect);
+        hungryAlgo = (Button) view.findViewById(R.id.btn_hungry_algorithm);
+        headacheCollect = (Button) view.findViewById(R.id.btn_headache_collect);
+        headacheAlgo = (Button) view.findViewById(R.id.btn_headache_algorithm);
+        aboutCollect = (Button) view.findViewById(R.id.btn_about_collect);
+        aboutAlgo = (Button) view.findViewById(R.id.btn_about_algorithm);
+        result = (TextView) view.findViewById(R.id.result);
 
         //create listeners for start and stop
-        start.setOnClickListener((View.OnClickListener) this);
-        stop.setOnClickListener((View.OnClickListener) this);
-        upload.setOnClickListener((View.OnClickListener) this);
-        download.setOnClickListener((View.OnClickListener) this);
+        copCollect.setOnClickListener((View.OnClickListener) this);
+        copAlgo.setOnClickListener((View.OnClickListener) this);
+        hungryCollect.setOnClickListener((View.OnClickListener) this);
+        hungryAlgo.setOnClickListener((View.OnClickListener) this);
+        headacheCollect.setOnClickListener((View.OnClickListener) this);
+        headacheAlgo.setOnClickListener((View.OnClickListener) this);
+        aboutCollect.setOnClickListener((View.OnClickListener) this);
+        aboutAlgo.setOnClickListener((View.OnClickListener) this);
 
 		//create new data series and set the colors
         seriesX = new LineGraphSeries<>();
@@ -77,8 +82,27 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         seriesY.setColor(Color.GREEN);
         seriesZ.setColor(Color.BLUE);
 
+        dynamicData = new ArrayList<>();
+        copData = new ArrayList<>();
+        hungryData = new ArrayList<>();
+        headacheData = new ArrayList<>();
+        aboutData = new ArrayList<>();
+
+        textToSpeech = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int res = textToSpeech.setLanguage(Locale.ENGLISH);
+                    if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.i("info", "language not supported");
+                    }
+                }
+            }
+        });
+
 		//create new random, handler, set thread toggle to false.
         running = false;
+
 
         //initialize accelerometer senor
         sersorIntent = new Intent(getActivity(), sensorHandler.class);
@@ -90,8 +114,10 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.getGridLabelRenderer().setHorizontalAxisTitle("Series Index");
         graph.getGridLabelRenderer().setVerticalAxisTitle("Random Values");
 
-        //create database if not exist
-        db = SQLiteDatabase.openOrCreateDatabase("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4", null);
+        graph.addSeries(seriesX);
+        graph.addSeries(seriesY);
+        graph.addSeries(seriesZ);
+        getActivity().startService(sersorIntent);
 
         return view;
     }
@@ -109,104 +135,89 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         super.onPause();
     }
 
-	/*if a click occurs, check to see if it was from the start
-	or stop buttons.  If start, then check if the thread is already
-	running, if no, add series to graph and add generateData to
-	message queue.
-	If a click on stop, check for running thread, stop if running
-	and remove data series from graph (clears graph) and clear
-	message queue.
-    If a click on upload, start an async upload task which will upload
-    the file "group4" and "group4-journal" to the server.
-    if a click on download, start an async download task which will download
-    the files from the server and save as "group4_download" and
-    "group4_download-journal".
-	onClick ignores redundant clicks.*/
     @Override
     public void onClick(View v) {
-        if(v.getId()== R.id.btn_start){
 
-            Log.i("info", "start");
-            if(running) return;
-            running=true;
-            graph.addSeries(seriesX);
-            graph.addSeries(seriesY);
-            graph.addSeries(seriesZ);
-            createTable();
-            getActivity().startService(sersorIntent);
+        if(v.getId()== R.id.btn_cop_collect){
+            speakText("get ready in 3 second");
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    speakText("start");
+                }
+            }, 5000);
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    int len=dynamicData.size();
+                    List<float[]> data=new ArrayList<>();
+                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
+                    copData.add(data);
+                    if(copData.size()>4) copData.remove(0);
+                    for(float[] e: data){
+                        Log.i("info", Arrays.toString(e));
+                    }
+                }
+            }, 10000);
 
-        }else if(v.getId()== R.id.btn_stop){
+        }else if(v.getId()== R.id.btn_cop_algo){
+            analyzeCop();
 
-            Log.i("info", "stop");
-            if(!running) return;
-            running=false;
-            getActivity().stopService(sersorIntent);
-            graph.removeAllSeries();
+        }else if(v.getId()== R.id.btn_hungry_collect){
 
-        }else if(v.getId() == R.id.btn_upload){
 
-            Log.i("info", "upload");
-            uploadDatabase();
+        }else if(v.getId()== R.id.btn_hungry_algorithm){
 
-        }else if(v.getId() == R.id.btn_download){
 
-            Log.i("info", "download");
-            downloadDatabase();
+        }else if(v.getId()== R.id.btn_headache_collect){
+
+
+        }else if(v.getId()== R.id.btn_headache_algorithm){
+
+
+        }else if(v.getId()== R.id.btn_about_collect){
+
+
+        }else if(v.getId()== R.id.btn_about_algorithm){
+
 
         }
     }
 
-    //create the table based on the user input
-    private void createTable() {
-        db.beginTransaction();
-        try {
-            String tableName = getTableName();
-            Log.i("info", "create table "+tableName);
-
-            db.execSQL("create table if not exists " + tableName + " ("
-                    + " time integer, "
-                    + " x float, "
-                    + " y float, "
-                    + " z float ); " );
-
-            db.setTransactionSuccessful(); //commit your changes
-        }catch (SQLiteException e) {
-            //report problem
-        }finally {
-            db.endTransaction();
+    private void analyzeCop() {
+        int copSize = copData.size(), otherSize=hungryData.size()+headacheData.size()+aboutData.size();
+        String tp="", fp="";
+        if(copSize==0){
+            tp="NA";
+        }else{
+            int positiveCount=copValid(copData);
+            tp=Double.toString(positiveCount*1.0/copSize);
         }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=copValid(hungryData)+copValid(headacheData)+copValid(aboutData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("cop algo: true positive: "+tp+", false positive: "+fp);
     }
 
-    //generate the table name based on the user input
-    private String getTableName() {
-        String id = patientID.getText().toString(),
-                a = age.getText().toString(),
-                name = patientName.getText().toString(), s="";
-        int checkedID = sex.getCheckedRadioButtonId();
-        if(checkedID == R.id.male) s = "male";
-        else if(checkedID == R.id.female) s = "female";
-        return name+"_"+id+"_"+a+"_"+s;
-    }
-
-    //execute the upload tasks
-    private void uploadDatabase() {
-        new UploadTask().execute("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4");
-        new UploadTask().execute("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4-journal");
-    }
-
-    //execute the download task and show the last ten data set
-    private void downloadDatabase(){
-        try {
-            String res = new DownloadTask().execute("/sdcard/Android/data/CSE535_ASSIGNMENT2/group4_download").get();
-            if(res.equals("completed")){
-                showLastTenRow();
+    private int copValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
+                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
             }
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
+            if(diff1>20&&diff2<20&&diff3<20
+                    ||diff1<20&&diff2>20&&diff3<20
+                    ||diff1<20&&diff2<20&&diff3>20) positiveCount++;
         }
+        return positiveCount;
     }
+
 
     //receive data from the accelerometer service
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -215,70 +226,18 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             String msg = intent.getStringExtra("acData");
 
             String[] vals = msg.split(" ");
-            Log.i("info"," receive data "+ Arrays.toString(vals));
+            //Log.i("info"," receive data "+ Arrays.toString(vals));
             seriesX.appendData(new DataPoint(count+1, Float.parseFloat(vals[0])), true, 40);
             seriesY.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
             seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(vals[2])), true, 40);
-
-            //insert data to database
-            insertRow(count+1, Float.parseFloat(vals[0]), Float.parseFloat(vals[1]), Float.parseFloat(vals[2]));
+            dynamicData.add(new float[]{Float.parseFloat(vals[0]), Float.parseFloat(vals[1]), Float.parseFloat(vals[2])});
+            while (dynamicData.size()>80) dynamicData.remove(0);
             count++;
         }
     };
 
-    //insert the new data into the table
-    private void insertRow(int time, float x, float y, float z){
-        db.beginTransaction();
-        try {
-            //perform your database operations here ...
-            String tableName = getTableName();
-            Log.i("info", "insert row");
-            db.execSQL("insert into " + tableName + " (time, x, y, z) values ("
-                    + count + ", " + x + ", " + y + ", " + z + ")");
-            db.setTransactionSuccessful(); //commit your changes
-        }catch (SQLiteException e) {
-            //report problem
-        }finally {
-            db.endTransaction();
-        }
-    }
-
-    //extract the last ten row from the database and show them on the graph
-    private void showLastTenRow(){
-
-        //declare data series for downloaded data
-        LineGraphSeries<DataPoint> tempSeriesX, tempSeriesY, tempSeriesZ;
-        tempSeriesX = new LineGraphSeries<>();
-        tempSeriesY = new LineGraphSeries<>();
-        tempSeriesZ = new LineGraphSeries<>();
-
-        tempSeriesX.setColor(Color.RED);
-        tempSeriesY.setColor(Color.GREEN);
-        tempSeriesZ.setColor(Color.BLUE);
-
-        //read downloaded database file
-        SQLiteDatabase tempdb = SQLiteDatabase.openOrCreateDatabase(
-                "/sdcard/Android/data/CSE535_ASSIGNMENT2/group4_download", null);
-
-        //get the last ten row
-        Cursor res = tempdb.rawQuery( "select * from " + getTableName()
-                + " order by time desc limit 10", null );
-
-        //put data into the series
-        res.moveToLast();
-        int count = 10;
-        while(res.isBeforeFirst() == false && count>0) {
-            int time = res.getInt(res.getColumnIndex("time"));
-            tempSeriesX.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("x"))), true, 40);
-            tempSeriesY.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("y"))), true, 40);
-            tempSeriesZ.appendData(new DataPoint(time, res.getFloat(res.getColumnIndex("z"))), true, 40);
-            res.moveToPrevious();
-            count--;
-        }
-        graph.removeAllSeries();
-        graph.addSeries(tempSeriesX);
-        graph.addSeries(tempSeriesY);
-        graph.addSeries(tempSeriesZ);
+    private void speakText(String text) {
+        textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null);
     }
 
 }

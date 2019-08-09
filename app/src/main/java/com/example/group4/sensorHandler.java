@@ -88,7 +88,7 @@ public class sensorHandler extends Service implements SensorEventListener{
             sendingIntent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             sendingIntent.putExtra("acData", accelValuesX[index]+" "+accelValuesY[index]+" "+accelValuesZ[index]);
             sendBroadcast(sendingIntent);
-            handler.postDelayed(sendData, 500);
+            handler.postDelayed(sendData, 100);
         }
     };
 

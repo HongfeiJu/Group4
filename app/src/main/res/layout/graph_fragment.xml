@@ -5,129 +5,117 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/PatientID"
-        android:layout_width="94dp"
-        android:layout_height="50dp"
-        android:ems="10"
-        android:hint="patient_id"
-        android:inputType="textPersonName"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/patient_name"
-        android:layout_width="146dp"
-        android:layout_height="50dp"
-        android:ems="10"
-        android:hint="Patient Name"
-        android:inputType="textPersonName"
-        app:layout_constraintStart_toEndOf="@+id/age"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <RadioGroup
-        android:id="@+id/sexes"
-        android:layout_width="291dp"
-        android:layout_height="52dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.259"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/age">
-
-        <RadioButton
-            android:id="@+id/male"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="male" />
-
-        <RadioButton
-            android:id="@+id/female"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="female" />
-    </RadioGroup>
-
-    <Button
-        android:id="@+id/btn_stop"
-        android:layout_width="70dp"
-        android:layout_height="40dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="120dp"
-        android:background="#E91E63"
-        android:text="stop"
-        app:layout_constraintStart_toEndOf="@+id/btn_start"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/age"
-
-        android:layout_width="82dp"
-        android:layout_height="50dp"
-        android:layout_alignStart="@+id/patient_name"
-        android:layout_alignLeft="@+id/patient_name"
-        android:layout_marginStart="20dp"
-        android:ems="10"
-        android:hint="age"
-        android:inputType="textPersonName"
-        app:layout_constraintStart_toEndOf="@+id/PatientID"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btn_start"
-        android:layout_width="70dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="120dp"
-        android:background="#4CAF50"
-        android:onClick="start"
-        android:text="run"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graph"
-        android:layout_width="352dp"
-        android:layout_height="283dp"
+        android:layout_width="394dp"
+        android:layout_height="218dp"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="184dp"
+        android:layout_marginTop="240dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.627"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_upload"
-        android:layout_width="wrap_content"
+        android:id="@+id/btn_cop_collect"
+        android:layout_width="150dp"
         android:layout_height="40dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:background="#4CAF50"
-        android:text="upload"
-        app:layout_constraintEnd_toStartOf="@+id/btn_download"
-        app:layout_constraintStart_toEndOf="@+id/btn_stop"
+        android:text="cop collect"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_download"
-        android:layout_width="wrap_content"
+        android:id="@+id/btn_cop_algo"
+        android:layout_width="150dp"
         android:layout_height="40dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
         android:background="#E91E63"
-        android:text="download"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="cop algorithm"
+        app:layout_constraintStart_toEndOf="@+id/btn_cop_collect"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_hungry_collect"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:background="#4CAF50"
+        android:text="hungry collect"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_cop_collect" />
+
+    <Button
+        android:id="@+id/btn_hungry_algorithm"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:background="#E91E63"
+        android:text="hungry algorithm"
+        app:layout_constraintStart_toEndOf="@+id/btn_hungry_collect"
+        app:layout_constraintTop_toBottomOf="@+id/btn_cop_algo" />
+
+    <Button
+        android:id="@+id/btn_headache_collect"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:background="#4CAF50"
+        android:text="headace collect"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_hungry_collect" />
+
+    <Button
+        android:id="@+id/btn_headache_algorithm"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:background="#E91E63"
+        android:text="headace algorithm"
+        app:layout_constraintStart_toEndOf="@+id/btn_headache_collect"
+        app:layout_constraintTop_toBottomOf="@+id/btn_hungry_algorithm" />
+
+    <Button
+        android:id="@+id/btn_about_collect"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:background="#4CAF50"
+        android:text="about collect"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_headache_collect" />
+
+    <Button
+        android:id="@+id/btn_about_algorithm"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:background="#E91E63"
+        android:text="about algorithm"
+        app:layout_constraintStart_toEndOf="@+id/btn_about_collect"
+        app:layout_constraintTop_toBottomOf="@+id/btn_headache_algorithm" />
+
+    <TextView
+        android:id="@+id/result"
+        android:layout_width="330dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
+        android:text="result"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_about_algorithm" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
