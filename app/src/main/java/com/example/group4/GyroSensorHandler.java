@@ -13,22 +13,18 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.telephony.SmsManager;
 import android.util.Log;
-import android.widget.Toast;
 
-public class sensorHandler extends Service implements SensorEventListener{
+public class GyroSensorHandler extends Service implements SensorEventListener{
 
     public static final String BROADCAST_ACTION = "com.example.group4";
 
-    private SensorManager accelManage;
-    private Sensor senseAccel;
-    float accelValuesX[] = new float[128];
-    float accelValuesY[] = new float[128];
-    float accelValuesZ[] = new float[128];
+    private SensorManager manager;
+    private Sensor senseGyro;
+    float gyroX[] = new float[128];
+    float gryoY[] = new float[128];
+    float gryoZ[] = new float[128];
     int index = 0;
-    int k=0;
-    Bundle b;
 
     Handler handler;
 
@@ -37,20 +33,22 @@ public class sensorHandler extends Service implements SensorEventListener{
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         Sensor mySensor = sensorEvent.sensor;
+        //Log.i("info", "sensor type: " + mySensor.getName());
 
-        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (mySensor.getType() == Sensor.TYPE_GYROSCOPE) {
             index++;
-            accelValuesX[index] = sensorEvent.values[0];
-            accelValuesY[index] = sensorEvent.values[1];
-            accelValuesZ[index] = sensorEvent.values[2];
-            Log.d("info", "generating data "+accelValuesX[index]+" "+accelValuesY[index]);
+            gyroX[index] = sensorEvent.values[0];
+            gryoY[index] = sensorEvent.values[1];
+            gryoZ[index] = sensorEvent.values[2];
+            //Log.d("info", "gyro data "+gyroX[index]+" "+gryoY[index]+" "+gryoZ[index]);
             if(index >= 127){
                 index = 0;
-                accelManage.unregisterListener(this);
+                manager.unregisterListener(this);
                 //callFallRecognition();
-                accelManage.registerListener(this, senseAccel, SensorManager.SENSOR_DELAY_NORMAL);
+                manager.registerListener(this, senseGyro, SensorManager.SENSOR_DELAY_NORMAL);
             }
         }
+
     }
 
     @Override
@@ -58,11 +56,12 @@ public class sensorHandler extends Service implements SensorEventListener{
 
     @Override
     public void onCreate(){
-        Log.i("info", "sensor service start");
+        Log.i("info", "gyro sensor service start");
 
-        accelManage = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        senseAccel = accelManage.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        accelManage.registerListener(this, senseAccel, SensorManager.SENSOR_DELAY_NORMAL);
+        manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        senseGyro = manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        manager.registerListener(this, senseGyro, SensorManager.SENSOR_DELAY_GAME);
 
         handler = new Handler();
         sendingIntent = new Intent(BROADCAST_ACTION);
@@ -84,9 +83,9 @@ public class sensorHandler extends Service implements SensorEventListener{
     Runnable sendData = new Runnable() {
         @Override
         public void run() {
-            Log.d("info", "generating data "+accelValuesX[index]+" "+accelValuesY[index]);
+            //Log.d("info", "generating data "+accelValuesX[index]+" "+accelValuesY[index]);
             sendingIntent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-            sendingIntent.putExtra("acData", accelValuesX[index]+" "+accelValuesY[index]+" "+accelValuesZ[index]);
+            sendingIntent.putExtra("gyroData", gyroX[index]+" "+gryoY[index]+" "+gryoZ[index]);
             sendBroadcast(sendingIntent);
             handler.postDelayed(sendData, 100);
         }
