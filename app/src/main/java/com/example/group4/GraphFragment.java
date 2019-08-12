@@ -207,8 +207,8 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
             for(float[] e: data){
                 min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
-                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
-                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
+                min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
             if(diff1>20&&diff2<20&&diff3<20
