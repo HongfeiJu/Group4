@@ -162,26 +162,80 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             analyzeCop();
 
         }else if(v.getId()== R.id.btn_hungry_collect){
+            speakText("get ready in 3 second");
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    speakText("start");
+                }
+            }, 5000);
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    int len=dynamicData.size();
+                    List<float[]> data=new ArrayList<>();
+                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
+                    hungryData.add(data);
+                    if(hungryData.size()>4) hungryData.remove(0);
+                    for(float[] e: data){
+                        Log.i("info", Arrays.toString(e));
+                    }
+                }
+            }, 10000);
+
 
 
         }else if(v.getId()== R.id.btn_hungry_algorithm){
-
-
+            analyzeHungry();
         }else if(v.getId()== R.id.btn_headache_collect){
+            speakText("get ready in 3 second");
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    speakText("start");
+                }
+            }, 5000);
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    int len=dynamicData.size();
+                    List<float[]> data=new ArrayList<>();
+                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
+                    headacheData.add(data);
+                    if(headacheData.size()>4) headacheData.remove(0);
+                    for(float[] e: data){
+                        Log.i("info", Arrays.toString(e));
+                    }
+                }
+            }, 10000);
+
 
 
         }else if(v.getId()== R.id.btn_headache_algorithm){
-
-
+            analyzeHeadache();
         }else if(v.getId()== R.id.btn_about_collect){
+            speakText("get ready in 3 second");
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    speakText("start");
+                }
+            }, 5000);
+            (new Handler()).postDelayed(new Runnable() {
+                public void run() {
+                    int len=dynamicData.size();
+                    List<float[]> data=new ArrayList<>();
+                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
+                    aboutData.add(data);
+                    if(aboutData.size()>4) aboutData.remove(0);
+                    for(float[] e: data){
+                        Log.i("info", Arrays.toString(e));
+                    }
+                }
+            }, 10000);
 
 
         }else if(v.getId()== R.id.btn_about_algorithm){
-
-
+            analyzeAbout();
         }
     }
 
+    //Cop Method
     private void analyzeCop() {
         int copSize = copData.size(), otherSize=hungryData.size()+headacheData.size()+aboutData.size();
         String tp="", fp="";
@@ -202,6 +256,117 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     }
 
     private int copValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
+                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+            }
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
+            if(diff1>20 && diff2 < 20 && diff3 <20
+                    || diff1 < 20 && diff2 > 20 && diff3 <20
+                    || diff1 < 20 &&diff2 < 20 && diff3 >20) positiveCount++;
+        }
+        return positiveCount;
+    }
+
+    //Hungry Method
+    private void analyzeHungry() {
+        int hungrySize = hungryData.size(), otherSize=copData.size()+headacheData.size()+aboutData.size();
+        String tp="", fp="";
+        if(hungrySize==0){
+            tp="NA";
+        }else{
+            int positiveCount=copValid(hungryData);
+            tp=Double.toString(positiveCount*1.0/hungrySize);
+        }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=hungryValid(copData)+hungryValid(headacheData)+hungryValid(aboutData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("Hungry algo: true positive: "+tp+", false positive: "+fp);
+    }
+
+    private int hungryValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
+                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+            }
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
+            if(diff1>20&&diff2<20&&diff3<20
+                    ||diff1<20&&diff2>20&&diff3<20
+                    ||diff1<20&&diff2<20&&diff3>20) positiveCount++;
+        }
+        return positiveCount;
+    }
+
+//Headache method
+    private void analyzeHeadache() {
+        int headacheSize = headacheData.size(), otherSize=copData.size()+hungryData.size()+aboutData.size();
+        String tp="", fp="";
+        if(headacheSize==0){
+            tp="NA";
+        }else{
+            int positiveCount=headacheValid(headacheData);
+            tp=Double.toString(positiveCount*1.0/headacheSize);
+        }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=headacheValid(hungryData)+headacheValid(copData)+headacheValid(aboutData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("cop algo: true positive: "+tp+", false positive: "+fp);
+    }
+
+    private int headacheValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
+                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+            }
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
+            if(diff1>20&&diff2<20&&diff3<20
+                    ||diff1<20&&diff2>20&&diff3<20
+                    ||diff1<20&&diff2<20&&diff3>20) positiveCount++;
+        }
+        return positiveCount;
+    }
+
+    //About Method
+    private void analyzeAbout() {
+        int aboutSize = aboutData.size(), otherSize=copData.size()+headacheData.size()+hungryData.size();
+        String tp="", fp="";
+        if(aboutSize==0){
+            tp="NA";
+        }else{
+            int positiveCount=aboutValid(aboutData);
+            tp=Double.toString(positiveCount*1.0/aboutSize);
+        }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=aboutValid(hungryData)+aboutValid(headacheData)+aboutValid(copData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("cop algo: true positive: "+tp+", false positive: "+fp);
+    }
+
+    private int aboutValid(List<List<float[]>> dataSet) {
         int positiveCount=0;
         for(List<float[]> data: dataSet){
             float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
