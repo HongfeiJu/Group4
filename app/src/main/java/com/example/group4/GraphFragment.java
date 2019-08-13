@@ -13,8 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
@@ -27,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Queue;
 
 public class GraphFragment extends Fragment implements View.OnClickListener {
 	//define View, graph, local variables
@@ -39,13 +36,14 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private LineGraphSeries<DataPoint> seriesX, seriesY, seriesZ;
     private int count=1;
     private List<float[]> dynamicData;
+    private float gyroX = 0, gyroY = 0, gyroZ =0;
     private List<List<float[]>> copData, hungryData, headacheData, aboutData;
     private TextToSpeech textToSpeech;
 
 	//create random, thread handler, and thread toggle boolean
     boolean running;
 
-    Intent sersorIntent;
+    Intent sersorIntent, gyroSensorIntent;
 
 	//create graph fragment view
     @Override
@@ -105,7 +103,8 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 
 
         //initialize accelerometer senor
-        sersorIntent = new Intent(getActivity(), sensorHandler.class);
+        sersorIntent = new Intent(getActivity(), AcclSensorHandler.class);
+        gyroSensorIntent = new Intent(getActivity(), GyroSensorHandler.class);
 
 		//add data series to graph, set axis bounds and labels.
         graph.getViewport().setXAxisBoundsManual(true);
@@ -118,6 +117,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.addSeries(seriesY);
         graph.addSeries(seriesZ);
         getActivity().startService(sersorIntent);
+        getActivity().startService(gyroSensorIntent);
 
         return view;
     }
@@ -127,7 +127,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
         getActivity().registerReceiver(broadcastReceiver, new IntentFilter(
-                sensorHandler.BROADCAST_ACTION));
+                AcclSensorHandler.BROADCAST_ACTION));
     }
 
     @Override
@@ -139,103 +139,56 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
 
         if(v.getId()== R.id.btn_cop_collect){
-            speakText("get ready in 3 second");
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    speakText("start");
-                }
-            }, 5000);
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    int len=dynamicData.size();
-                    List<float[]> data=new ArrayList<>();
-                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
-                    copData.add(data);
-                    if(copData.size()>4) copData.remove(0);
-                    for(float[] e: data){
-                        Log.i("info", Arrays.toString(e));
-                    }
-                }
-            }, 10000);
+            collectData(copData);
+
 
         }else if(v.getId()== R.id.btn_cop_algo){
             analyzeCop();
 
         }else if(v.getId()== R.id.btn_hungry_collect){
-            speakText("get ready in 3 second");
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    speakText("start");
-                }
-            }, 5000);
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    int len=dynamicData.size();
-                    List<float[]> data=new ArrayList<>();
-                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
-                    hungryData.add(data);
-                    if(hungryData.size()>4) hungryData.remove(0);
-                    for(float[] e: data){
-                        Log.i("info", Arrays.toString(e));
-                    }
-                }
-            }, 10000);
-
-
+            collectData(copData);
 
         }else if(v.getId()== R.id.btn_hungry_algorithm){
             analyzeHungry();
+
         }else if(v.getId()== R.id.btn_headache_collect){
-            speakText("get ready in 3 second");
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    speakText("start");
-                }
-            }, 5000);
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    int len=dynamicData.size();
-                    List<float[]> data=new ArrayList<>();
-                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
-                    headacheData.add(data);
-                    if(headacheData.size()>4) headacheData.remove(0);
-                    for(float[] e: data){
-                        Log.i("info", Arrays.toString(e));
-                    }
-                }
-            }, 10000);
-
-
+            collectData(headacheData);
 
         }else if(v.getId()== R.id.btn_headache_algorithm){
-            analyzeHeadache();
-        }else if(v.getId()== R.id.btn_about_collect){
-            speakText("get ready in 3 second");
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    speakText("start");
-                }
-            }, 5000);
-            (new Handler()).postDelayed(new Runnable() {
-                public void run() {
-                    int len=dynamicData.size();
-                    List<float[]> data=new ArrayList<>();
-                    data.addAll(dynamicData.subList(Math.max(0, len-50), len));
-                    aboutData.add(data);
-                    if(aboutData.size()>4) aboutData.remove(0);
-                    for(float[] e: data){
-                        Log.i("info", Arrays.toString(e));
-                    }
-                }
-            }, 10000);
+            anaylzeHeadache();
 
+        }else if(v.getId()== R.id.btn_about_collect){
+            collectData(aboutData);
 
         }else if(v.getId()== R.id.btn_about_algorithm){
             analyzeAbout();
+
         }
     }
 
-    //Cop Method
+
+
+    private void collectData(final List<List<float[]>> targetData) {
+        speakText("get ready in 3 second");
+        (new Handler()).postDelayed(new Runnable() {
+            public void run() {
+                speakText("start");
+            }
+        }, 5000);
+        (new Handler()).postDelayed(new Runnable() {
+            public void run() {
+                int len=dynamicData.size();
+                List<float[]> data=new ArrayList<>();
+                data.addAll(dynamicData.subList(Math.max(0, len-50), len));
+                targetData.add(data);
+                if(targetData.size()>4) targetData.remove(0);
+                for(float[] e: data){
+                    Log.i("info", Arrays.toString(e));
+                }
+            }
+        }, 10000);
+    }
+
     private void analyzeCop() {
         int copSize = copData.size(), otherSize=hungryData.size()+headacheData.size()+aboutData.size();
         String tp="", fp="";
@@ -260,46 +213,9 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         for(List<float[]> data: dataSet){
             float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
             for(float[] e: data){
-                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
-                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
-                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
-            }
-            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
-            if(diff1>20 && diff2 < 20 && diff3 <20
-                    || diff1 < 20 && diff2 > 20 && diff3 <20
-                    || diff1 < 20 &&diff2 < 20 && diff3 >20) positiveCount++;
-        }
-        return positiveCount;
-    }
-
-    //Hungry Method
-    private void analyzeHungry() {
-        int hungrySize = hungryData.size(), otherSize=copData.size()+headacheData.size()+aboutData.size();
-        String tp="", fp="";
-        if(hungrySize==0){
-            tp="NA";
-        }else{
-            int positiveCount=copValid(hungryData);
-            tp=Double.toString(positiveCount*1.0/hungrySize);
-        }
-
-        if(otherSize==0){
-            fp="NA";
-        }else{
-            int positiveCount=hungryValid(copData)+hungryValid(headacheData)+hungryValid(aboutData);
-            fp=Double.toString(positiveCount*1.0/otherSize);
-        }
-        result.setText("Hungry algo: true positive: "+tp+", false positive: "+fp);
-    }
-
-    private int hungryValid(List<List<float[]>> dataSet) {
-        int positiveCount=0;
-        for(List<float[]> data: dataSet){
-            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
-            for(float[] e: data){
-                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
-                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
-                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]); //x
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]); //y
+                min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]); //z
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
             if(diff1>20&&diff2<20&&diff3<20
@@ -309,9 +225,8 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         return positiveCount;
     }
 
-//Headache method
-    private void analyzeHeadache() {
-        int headacheSize = headacheData.size(), otherSize=copData.size()+hungryData.size()+aboutData.size();
+    private void anaylzeHeadache() {
+        int headacheSize = headacheData.size(), otherSize=hungryData.size()+copData.size()+aboutData.size();
         String tp="", fp="";
         if(headacheSize==0){
             tp="NA";
@@ -323,10 +238,10 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         if(otherSize==0){
             fp="NA";
         }else{
-            int positiveCount=headacheValid(hungryData)+headacheValid(copData)+headacheValid(aboutData);
+            int positiveCount=headacheValid(hungryData)+copValid(copData)+copValid(aboutData);
             fp=Double.toString(positiveCount*1.0/otherSize);
         }
-        result.setText("cop algo: true positive: "+tp+", false positive: "+fp);
+        result.setText("headache algo: true positive: "+tp+", false positive: "+fp);
     }
 
     private int headacheValid(List<List<float[]>> dataSet) {
@@ -334,21 +249,56 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         for(List<float[]> data: dataSet){
             float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
             for(float[] e: data){
-                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
-                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
-                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+                min1=Math.min(min1, e[3]); max1=Math.max(max1, e[3]);
+                min2=Math.min(min2, e[4]); max2=Math.max(max2, e[4]);
+                min3=Math.min(min3, e[5]); max3=Math.max(max3, e[5]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
-            if(diff1>20&&diff2<20&&diff3<20
-                    ||diff1<20&&diff2>20&&diff3<20
-                    ||diff1<20&&diff2<20&&diff3>20) positiveCount++;
+            if(diff1>10&&diff2<10&&diff3<10
+                    ||diff1<10&&diff2>10&&diff3<10
+                    ||diff1<10&&diff2<10&&diff3>10) positiveCount++;
         }
         return positiveCount;
     }
 
-    //About Method
+    private void analyzeHungry() {
+        int hungrySize = hungryData.size(), otherSize=headacheData.size()+copData.size()+aboutData.size();
+        String tp="", fp="";
+        if(hungrySize==0){
+            tp="NA";
+        }else{
+            int positiveCount=hungryValid(hungryData);
+            tp=Double.toString(positiveCount*1.0/hungrySize);
+        }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=hungryValid(headacheData) + hungryValid(copData) + hungryValid(aboutData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("hungry algo: true positive: "+tp+", false positive: "+fp);
+    }
+
+    private int hungryValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[3]); max1=Math.max(max1, e[3]);
+                min2=Math.min(min2, e[4]); max2=Math.max(max2, e[4]);
+                min3=Math.min(min3, e[5]); max3=Math.max(max3, e[5]);
+            }
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
+            if(diff1>10&&diff2<10&&diff3<10
+                    ||diff1<10&&diff2>10&&diff3<10
+                    ||diff1<10&&diff2<10&&diff3>10) positiveCount++;
+        }
+        return positiveCount;
+    }
+
     private void analyzeAbout() {
-        int aboutSize = aboutData.size(), otherSize=copData.size()+headacheData.size()+hungryData.size();
+        int aboutSize = aboutData.size(), otherSize=headacheData.size()+copData.size()+hungryData.size();
         String tp="", fp="";
         if(aboutSize==0){
             tp="NA";
@@ -360,10 +310,10 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         if(otherSize==0){
             fp="NA";
         }else{
-            int positiveCount=aboutValid(hungryData)+aboutValid(headacheData)+aboutValid(copData);
+            int positiveCount= aboutValid(headacheData)+ aboutValid(copData)+ aboutValid(hungryData);
             fp=Double.toString(positiveCount*1.0/otherSize);
         }
-        result.setText("cop algo: true positive: "+tp+", false positive: "+fp);
+        result.setText("about algo: true positive: "+tp+", false positive: "+fp);
     }
 
     private int aboutValid(List<List<float[]>> dataSet) {
@@ -371,14 +321,14 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         for(List<float[]> data: dataSet){
             float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
             for(float[] e: data){
-                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
-                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[0]);
-                min3=Math.min(min3, e[1]); max3=Math.max(max3, e[0]);
+                min1=Math.min(min1, e[3]); max1=Math.max(max1, e[3]);
+                min2=Math.min(min2, e[4]); max2=Math.max(max2, e[4]);
+                min3=Math.min(min3, e[5]); max3=Math.max(max3, e[5]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
-            if(diff1>20&&diff2<20&&diff3<20
-                    ||diff1<20&&diff2>20&&diff3<20
-                    ||diff1<20&&diff2<20&&diff3>20) positiveCount++;
+            if(diff1>10&&diff2<10&&diff3<10
+                    ||diff1<10&&diff2>10&&diff3<10
+                    ||diff1<10&&diff2<10&&diff3>10) positiveCount++;
         }
         return positiveCount;
     }
@@ -388,16 +338,25 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String msg = intent.getStringExtra("acData");
-
-            String[] vals = msg.split(" ");
-            //Log.i("info"," receive data "+ Arrays.toString(vals));
-            seriesX.appendData(new DataPoint(count+1, Float.parseFloat(vals[0])), true, 40);
-            seriesY.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
-            seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(vals[2])), true, 40);
-            dynamicData.add(new float[]{Float.parseFloat(vals[0]), Float.parseFloat(vals[1]), Float.parseFloat(vals[2])});
-            while (dynamicData.size()>80) dynamicData.remove(0);
-            count++;
+            String acclmsg = intent.getStringExtra("acData"), gyromsg = intent.getStringExtra("gyroData");
+            if(acclmsg!=null){
+                String[] vals = acclmsg.split(" ");
+                //Log.i("info"," receive data "+ Arrays.toString(vals));
+                seriesX.appendData(new DataPoint(count+1, Float.parseFloat(vals[0])), true, 40);
+                seriesY.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
+                seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(vals[2])), true, 40);
+                dynamicData.add(new float[]{Float.parseFloat(vals[0]), Float.parseFloat(vals[1]), Float.parseFloat(vals[2]),
+                gyroX, gyroY, gyroZ});
+                Log.i("info", Arrays.toString(dynamicData.get(dynamicData.size()-1)));
+                while (dynamicData.size()>80) dynamicData.remove(0);
+                count++;
+            }
+            if(gyromsg!=null){
+                String[] vals = gyromsg.split(" ");
+                gyroX = Float.parseFloat(vals[0]);
+                gyroY = Float.parseFloat(vals[1]);
+                gyroZ = Float.parseFloat(vals[2]);
+            }
         }
     };
 
