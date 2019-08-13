@@ -217,9 +217,9 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
                 min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
                 min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
-                min4=Math.min(min1, e[3]); max4=Math.max(max1, e[3]);
-                min5=Math.min(min2, e[4]); max5=Math.max(max2, e[4]);
-                min6=Math.min(min3, e[5]); max6=Math.max(max3, e[5]);
+                min4=Math.min(min4, e[3]); max4=Math.max(max4, e[3]);
+                min5=Math.min(min5, e[4]); max5=Math.max(max5, e[4]);
+                min6=Math.min(min6, e[5]); max6=Math.max(max6, e[5]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
                     diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
@@ -259,9 +259,9 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
                 min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
                 min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
-                min4=Math.min(min1, e[3]); max4=Math.max(max1, e[3]);
-                min5=Math.min(min2, e[4]); max5=Math.max(max2, e[4]);
-                min6=Math.min(min3, e[5]); max6=Math.max(max3, e[5]);
+                min4=Math.min(min4, e[3]); max4=Math.max(max4, e[3]);
+                min5=Math.min(min5, e[4]); max5=Math.max(max5, e[4]);
+                min6=Math.min(min6, e[5]); max6=Math.max(max6, e[5]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
                     diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
