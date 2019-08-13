@@ -2,29 +2,31 @@ package com.example.group4;
 
 import android.util.Log;
 
+
+import java.util.ArrayList;
+
 public class DataSmoother {
 
-    public void smooth(float[] values, int window) {
+    public void smooth(ArrayList<Float> values, int window) {
         try {
             float sum;
-            float[] data = new float[values.length];
+            ArrayList<Float> data = new ArrayList<Float>(values.size());
 
-            for (int i = 0; i < values.length; ++i) {
+            for (int i = 0; i < values.size(); ++i) {
                 sum = 0;
-                for (int k = (i - window); k < (i + window); ++k) {
+                for (int k = (i - window); k <= (i + window); ++k) {
 
-                    if ((0 > k) || (values.length < k)) {
+                    if ((0 > k) || (values.size()-1 < k)) {
                         continue;
                     } else {
-                        sum = sum + values[k];
+                        sum = sum + values.get(k);
                     }
                 }
-                data[i] = sum / (window + window + 1);
+                data.add(sum / (window + window + 1));
             }
 
-            for (int i = 0; i < values.length; ++i) {
-                values[i] = data[i];
-            }
+            values.clear();
+            values.addAll(data);
         }
         catch (Exception e) {
             Log.e("Smooth", e.toString());

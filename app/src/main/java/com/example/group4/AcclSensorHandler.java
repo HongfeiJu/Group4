@@ -23,9 +23,9 @@ public class AcclSensorHandler extends Service implements SensorEventListener{
 
     private SensorManager manager;
     private Sensor senseAccel;
-    float accelValuesX[] = new float[128];
-    float accelValuesY[] = new float[128];
-    float accelValuesZ[] = new float[128];
+    float[] accelValuesX = new float[128];
+    float[] accelValuesY = new float[128];
+    float[] accelValuesZ = new float[128];
     int index = 0;
 
     Handler handler;

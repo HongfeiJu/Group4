@@ -21,6 +21,7 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,12 +35,13 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     headacheAlgo, aboutCollect, aboutAlgo;
     private TextView result;
     private LineGraphSeries<DataPoint> seriesX, seriesY, seriesZ;
-    private int count=1;
-    private List<float[]> dynamicData;
-    private float gyroX = 0, gyroY = 0, gyroZ =0;
-    private List<List<float[]>> copData, hungryData, headacheData, aboutData;
+    private LineGraphSeries<DataPoint> gyroX, gyroY, gyroZ;
+    private int acclcount = 1, gyrocount = 1, count = 1;
+    private ArrayList<ArrayList<Float>> dynamicData;
+    private ArrayList<ArrayList<Float>> sensorData;
     private TextToSpeech textToSpeech;
     private DataSmoother smoother = new DataSmoother();
+    private final int num_sensor = 6;
 	//create random, thread handler, and thread toggle boolean
     boolean running;
 
@@ -53,7 +55,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         view = inflater.inflate(R.layout.graph_fragment, container, false);
         graph = (GraphView) view.findViewById(R.id.graph);
         copCollect = (Button) view.findViewById(R.id.btn_cop_collect);
-        copAlgo = (Button) view.findViewById(R.id.btn_cop_algo);
+        copAlgo = (Button) view.findViewById(R.id.btn_cop_algorithm);
         hungryCollect = (Button) view.findViewById(R.id.btn_hungry_collect);
         hungryAlgo = (Button) view.findViewById(R.id.btn_hungry_algorithm);
         headacheCollect = (Button) view.findViewById(R.id.btn_headache_collect);
@@ -76,15 +78,23 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         seriesX = new LineGraphSeries<>();
         seriesY = new LineGraphSeries<>();
         seriesZ = new LineGraphSeries<>();
+        gyroX = new LineGraphSeries<>();
+        gyroY = new LineGraphSeries<>();
+        gyroZ = new LineGraphSeries<>();
         seriesX.setColor(Color.RED);
         seriesY.setColor(Color.GREEN);
         seriesZ.setColor(Color.BLUE);
+        gyroX.setColor(Color.CYAN);
+        gyroY.setColor(Color.BLACK);
+        gyroZ.setColor(Color.MAGENTA);
 
-        dynamicData = new ArrayList<>();
-        copData = new ArrayList<>();
-        hungryData = new ArrayList<>();
-        headacheData = new ArrayList<>();
-        aboutData = new ArrayList<>();
+        dynamicData = new ArrayList<ArrayList<Float>>(num_sensor);
+        sensorData = new ArrayList<ArrayList<Float>>(num_sensor);
+
+        for(int i = 0; i < num_sensor; ++i) {
+            dynamicData.add(new ArrayList<Float>());
+            sensorData.add(new ArrayList<Float>());
+        }
 
         textToSpeech = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -111,11 +121,14 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         graph.getViewport().setMinX(0);
         graph.getViewport().setMaxX(40);
         graph.getGridLabelRenderer().setHorizontalAxisTitle("Series Index");
-        graph.getGridLabelRenderer().setVerticalAxisTitle("Random Values");
+        graph.getGridLabelRenderer().setVerticalAxisTitle("");
 
         graph.addSeries(seriesX);
         graph.addSeries(seriesY);
         graph.addSeries(seriesZ);
+        graph.addSeries(gyroX);
+        graph.addSeries(gyroY);
+        graph.addSeries(gyroZ);
         getActivity().startService(sersorIntent);
         getActivity().startService(gyroSensorIntent);
 
@@ -137,35 +150,26 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.btn_cop_collect:
+            case R.id.btn_hungry_collect:
+            case R.id.btn_headache_collect:
+            case R.id.btn_about_collect:
+                collectData(sensorData);
+                break;
+            case R.id.btn_cop_algorithm:
+            case R.id.btn_hungry_algorithm:
+            case R.id.btn_headache_algorithm:
+            case R.id.btn_about_algorithm:
+                break;
 
-        if(v.getId()== R.id.btn_cop_collect){
-            collectData(copData);
-
-        }else if(v.getId()== R.id.btn_cop_algo){
-
-        }else if(v.getId()== R.id.btn_hungry_collect){
-
-
-        }else if(v.getId()== R.id.btn_hungry_algorithm){
-
-
-        }else if(v.getId()== R.id.btn_headache_collect){
-            collectData(headacheData);
-
-        }else if(v.getId()== R.id.btn_headache_algorithm){
-
-
-        }else if(v.getId()== R.id.btn_about_collect){
-
-
-        }else if(v.getId()== R.id.btn_about_algorithm){
-
-
+            default:
+                Log.i("onClick", "Non-button clicked");
         }
     }
 
 
-    private void collectData(final List<List<float[]>> targetData) {
+    private void collectData(final ArrayList<ArrayList<Float>> targetData) {
         speakText("get ready in 3 second");
         (new Handler()).postDelayed(new Runnable() {
             public void run() {
@@ -174,17 +178,12 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         }, 5000);
         (new Handler()).postDelayed(new Runnable() {
             public void run() {
-                int len=dynamicData.size();
-                List<float[]> data=new ArrayList<>();
-                data.addAll(dynamicData.subList(Math.max(0, len-50), len));
-                targetData.add(data);
-                if(targetData.size()>4) targetData.remove(0);
-                for(float[] e: data){
-                    Log.i("info", Arrays.toString(e));
-                }
-                for(float[] e: data) {
-                    smoother.smooth(e, 3);
-                    Log.i("info:", Arrays.toString(e));
+                for(int i = 0; i < num_sensor; ++i) {
+                    int len = dynamicData.get(i).size();
+                    targetData.get(i).clear();
+                    targetData.get(i).addAll(dynamicData.get(i).subList(Math.max(0, len - 50), len));
+                    smoother.smooth(targetData.get(i),3);
+                    Log.i("info:", targetData.get(i).toString());
                 }
             }
         }, 10000);
@@ -194,24 +193,36 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String acclmsg = intent.getStringExtra("acData"), gyromsg = intent.getStringExtra("gyroData");
+            String[] acclvals;
+            String[] gyrovals;
+            String acclmsg = intent.getStringExtra("acData");
+            String gyromsg = intent.getStringExtra("gyroData");
+
             if(acclmsg!=null){
-                String[] vals = acclmsg.split(" ");
+                acclvals = acclmsg.split(" ");
                 //Log.i("info"," receive data "+ Arrays.toString(vals));
-                seriesX.appendData(new DataPoint(count+1, Float.parseFloat(vals[0])), true, 40);
-                seriesY.appendData(new DataPoint(count+1, Float.parseFloat(vals[1])), true, 40);
-                seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(vals[2])), true, 40);
-                dynamicData.add(new float[]{Float.parseFloat(vals[0]), Float.parseFloat(vals[1]), Float.parseFloat(vals[2]),
-                gyroX, gyroY, gyroZ});
-                Log.i("info", Arrays.toString(dynamicData.get(dynamicData.size()-1)));
-                while (dynamicData.size()>80) dynamicData.remove(0);
-                count++;
+                seriesX.appendData(new DataPoint(count+1, Float.parseFloat(acclvals[0])), true, 40);
+                seriesY.appendData(new DataPoint(count+1, Float.parseFloat(acclvals[1])), true, 40);
+                seriesZ.appendData(new DataPoint(count+1, Float.parseFloat(acclvals[2])), true, 40);
+                dynamicData.get(0).add(Float.parseFloat(acclvals[0]));
+                dynamicData.get(1).add(Float.parseFloat(acclvals[1]));
+                dynamicData.get(2).add(Float.parseFloat(acclvals[2]));
+                acclcount++;
             }
             if(gyromsg!=null){
-                String[] vals = gyromsg.split(" ");
-                gyroX = Float.parseFloat(vals[0]);
-                gyroY = Float.parseFloat(vals[1]);
-                gyroZ = Float.parseFloat(vals[2]);
+                gyrovals = gyromsg.split(" ");
+                gyroX.appendData(new DataPoint(count+1, Float.parseFloat(gyrovals[0])), true, 40);
+                gyroY.appendData(new DataPoint(count+1, Float.parseFloat(gyrovals[1])), true, 40);
+                gyroZ.appendData(new DataPoint(count+1, Float.parseFloat(gyrovals[2])), true, 40);
+                dynamicData.get(3).add(Float.parseFloat(gyrovals[0]));
+                dynamicData.get(4).add(Float.parseFloat(gyrovals[1]));
+                dynamicData.get(5).add(Float.parseFloat(gyrovals[2]));
+                gyrocount++;
+            }
+
+            while (dynamicData.size()>80) dynamicData.remove(0);
+            if (acclcount == gyrocount) {
+                count++;
             }
         }
     };
