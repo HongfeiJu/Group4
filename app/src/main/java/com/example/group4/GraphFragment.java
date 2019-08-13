@@ -146,10 +146,10 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             analyzeCop();
 
         }else if(v.getId()== R.id.btn_hungry_collect){
-
+            collectData(hungryData);
 
         }else if(v.getId()== R.id.btn_hungry_algorithm){
-
+            analyzeHungry();
 
         }else if(v.getId()== R.id.btn_headache_collect){
             collectData(headacheData);
@@ -158,14 +158,13 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             anaylzeHeadache();
 
         }else if(v.getId()== R.id.btn_about_collect){
-
+            collectData(aboutData);
 
         }else if(v.getId()== R.id.btn_about_algorithm){
-
+            analyzeAbout();
 
         }
     }
-
 
 
     private void collectData(final List<List<float[]>> targetData) {
@@ -217,9 +216,9 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
                 min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
                 min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
-                min4=Math.min(min1, e[3]); max4=Math.max(max1, e[3]);
-                min5=Math.min(min2, e[4]); max5=Math.max(max2, e[4]);
-                min6=Math.min(min3, e[5]); max6=Math.max(max3, e[5]);
+                min4=Math.min(min4, e[3]); max4=Math.max(max4, e[3]);
+                min5=Math.min(min5, e[4]); max5=Math.max(max5, e[4]);
+                min6=Math.min(min6, e[5]); max6=Math.max(max6, e[5]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
                     diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
@@ -259,14 +258,94 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
                 min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
                 min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
-                min4=Math.min(min1, e[3]); max4=Math.max(max1, e[3]);
-                min5=Math.min(min2, e[4]); max5=Math.max(max2, e[4]);
-                min6=Math.min(min3, e[5]); max6=Math.max(max3, e[5]);
+                min4=Math.min(min4, e[3]); max4=Math.max(max4, e[3]);
+                min5=Math.min(min5, e[4]); max5=Math.max(max5, e[4]);
+                min6=Math.min(min6, e[5]); max6=Math.max(max6, e[5]);
             }
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
                     diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
             Log.i("info", diff1+":"+diff2+":"+diff3+":"+diff4+":"+diff5+":"+diff6);
-            if(diff4/diff5>1.5&&diff6/diff5>1.5&&diff4>10&&diff6>1) positiveCount++;
+            if(diff4/diff5>1.5&&diff6/diff5>1.5&&diff4>10&&diff6>10) positiveCount++;
+        }
+        return positiveCount;
+    }
+
+    private void analyzeHungry() {
+        int hungrySize = hungryData.size(), otherSize=copData.size()+headacheData.size()+aboutData.size();
+        String tp="", fp="";
+        if(hungrySize==0){
+            tp="NA";
+        }else{
+            int positiveCount=hungryValid(hungryData);
+            tp=Double.toString(positiveCount*1.0/hungrySize);
+        }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=hungryValid(copData)+hungryValid(headacheData)+hungryValid(aboutData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("hungry algo: true positive: "+tp+", false positive: "+fp);
+    }
+
+    private int hungryValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, min4=0, min5=0, min6=0,
+                    max1=0, max2=0, max3=0,max4=0, max5=0, max6=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
+                min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
+                min4=Math.min(min4, e[3]); max4=Math.max(max4, e[3]);
+                min5=Math.min(min5, e[4]); max5=Math.max(max5, e[4]);
+                min6=Math.min(min6, e[5]); max6=Math.max(max6, e[5]);
+            }
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
+                    diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
+            Log.i("info", diff1+":"+diff2+":"+diff3+":"+diff4+":"+diff5+":"+diff6);
+            if(diff1/diff3>1.5&&diff2/diff3>1.5&&diff1>10&&diff2>10) positiveCount++;
+        }
+        return positiveCount;
+    }
+
+    private void analyzeAbout() {
+        int aboutSize = aboutData.size(), otherSize=hungryData.size()+headacheData.size()+copData.size();
+        String tp="", fp="";
+        if(aboutSize==0){
+            tp="NA";
+        }else{
+            int positiveCount=aboutValid(aboutData);
+            tp=Double.toString(positiveCount*1.0/aboutSize);
+        }
+
+        if(otherSize==0){
+            fp="NA";
+        }else{
+            int positiveCount=aboutValid(hungryData)+aboutValid(headacheData)+aboutValid(copData);
+            fp=Double.toString(positiveCount*1.0/otherSize);
+        }
+        result.setText("about algo: true positive: "+tp+", false positive: "+fp);
+    }
+
+    private int aboutValid(List<List<float[]>> dataSet) {
+        int positiveCount=0;
+        for(List<float[]> data: dataSet){
+            float min1=0, min2=0, min3=0, min4=0, min5=0, min6=0,
+                    max1=0, max2=0, max3=0,max4=0, max5=0, max6=0;
+            for(float[] e: data){
+                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
+                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
+                min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
+                min4=Math.min(min4, e[3]); max4=Math.max(max4, e[3]);
+                min5=Math.min(min5, e[4]); max5=Math.max(max5, e[4]);
+                min6=Math.min(min6, e[5]); max6=Math.max(max6, e[5]);
+            }
+            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
+                    diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
+            Log.i("info", diff1+":"+diff2+":"+diff3+":"+diff4+":"+diff5+":"+diff6);
+            if(diff2/diff1>1.5&&diff3/diff1>1.5&&diff2>10&&diff3>10) positiveCount++;
         }
         return positiveCount;
     }

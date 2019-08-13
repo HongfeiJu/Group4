@@ -40,7 +40,7 @@ public class GyroSensorHandler extends Service implements SensorEventListener{
             gyroX[index] = sensorEvent.values[0];
             gryoY[index] = sensorEvent.values[1];
             gryoZ[index] = sensorEvent.values[2];
-            //Log.d("info", "gyro data "+gyroX[index]+" "+gryoY[index]+" "+gryoZ[index]);
+            Log.d("info", "gyro data "+gyroX[index]+" "+gryoY[index]+" "+gryoZ[index]);
             if(index >= 127){
                 index = 0;
                 manager.unregisterListener(this);

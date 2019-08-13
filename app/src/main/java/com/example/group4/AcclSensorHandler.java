@@ -85,7 +85,8 @@ public class AcclSensorHandler extends Service implements SensorEventListener{
         public void run() {
             //Log.d("info", "generating data "+accelValuesX[index]+" "+accelValuesY[index]);
             sendingIntent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-            sendingIntent.putExtra("acData", accelValuesX[index]+" "+accelValuesY[index]+" "+accelValuesZ[index]);
+            sendingIntent.putExtra("acData", accelValuesX[index] + " "
+                    + (accelValuesY[index]-9.8)+ " " + (accelValuesZ[index]-1));
             sendBroadcast(sendingIntent);
             handler.postDelayed(sendData, 100);
         }
