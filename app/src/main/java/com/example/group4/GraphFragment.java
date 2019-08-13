@@ -39,7 +39,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private float gyroX = 0, gyroY = 0, gyroZ =0;
     private List<List<float[]>> copData, hungryData, headacheData, aboutData;
     private TextToSpeech textToSpeech;
-
+    private DataSmoother smoother = new DataSmoother();
 	//create random, thread handler, and thread toggle boolean
     boolean running;
 
@@ -141,9 +141,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         if(v.getId()== R.id.btn_cop_collect){
             collectData(copData);
 
-
         }else if(v.getId()== R.id.btn_cop_algo){
-            analyzeCop();
 
         }else if(v.getId()== R.id.btn_hungry_collect){
 
@@ -155,7 +153,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             collectData(headacheData);
 
         }else if(v.getId()== R.id.btn_headache_algorithm){
-            anaylzeHeadache();
+
 
         }else if(v.getId()== R.id.btn_about_collect){
 
@@ -165,7 +163,6 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
 
         }
     }
-
 
 
     private void collectData(final List<List<float[]>> targetData) {
@@ -185,82 +182,13 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 for(float[] e: data){
                     Log.i("info", Arrays.toString(e));
                 }
+                for(float[] e: data) {
+                    smoother.smooth(e, 3);
+                    Log.i("info:", Arrays.toString(e));
+                }
             }
         }, 10000);
     }
-
-    private void analyzeCop() {
-        int copSize = copData.size(), otherSize=hungryData.size()+headacheData.size()+aboutData.size();
-        String tp="", fp="";
-        if(copSize==0){
-            tp="NA";
-        }else{
-            int positiveCount=copValid(copData);
-            tp=Double.toString(positiveCount*1.0/copSize);
-        }
-
-        if(otherSize==0){
-            fp="NA";
-        }else{
-            int positiveCount=copValid(hungryData)+copValid(headacheData)+copValid(aboutData);
-            fp=Double.toString(positiveCount*1.0/otherSize);
-        }
-        result.setText("cop algo: true positive: "+tp+", false positive: "+fp);
-    }
-
-    private int copValid(List<List<float[]>> dataSet) {
-        int positiveCount=0;
-        for(List<float[]> data: dataSet){
-            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
-            for(float[] e: data){
-                min1=Math.min(min1, e[0]); max1=Math.max(max1, e[0]);
-                min2=Math.min(min2, e[1]); max2=Math.max(max2, e[1]);
-                min3=Math.min(min3, e[2]); max3=Math.max(max3, e[2]);
-            }
-            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
-            if(diff1>20&&diff2<20&&diff3<20
-                    ||diff1<20&&diff2>20&&diff3<20
-                    ||diff1<20&&diff2<20&&diff3>20) positiveCount++;
-        }
-        return positiveCount;
-    }
-
-    private void anaylzeHeadache() {
-        int headacheSize = headacheData.size(), otherSize=hungryData.size()+copData.size()+aboutData.size();
-        String tp="", fp="";
-        if(headacheSize==0){
-            tp="NA";
-        }else{
-            int positiveCount=headacheValid(headacheData);
-            tp=Double.toString(positiveCount*1.0/headacheSize);
-        }
-
-        if(otherSize==0){
-            fp="NA";
-        }else{
-            int positiveCount=headacheValid(hungryData)+copValid(copData)+copValid(aboutData);
-            fp=Double.toString(positiveCount*1.0/otherSize);
-        }
-        result.setText("headache algo: true positive: "+tp+", false positive: "+fp);
-    }
-
-    private int headacheValid(List<List<float[]>> dataSet) {
-        int positiveCount=0;
-        for(List<float[]> data: dataSet){
-            float min1=0, min2=0, min3=0, max1=0, max2=0, max3=0;
-            for(float[] e: data){
-                min1=Math.min(min1, e[3]); max1=Math.max(max1, e[3]);
-                min2=Math.min(min2, e[4]); max2=Math.max(max2, e[4]);
-                min3=Math.min(min3, e[5]); max3=Math.max(max3, e[5]);
-            }
-            float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3;
-            if(diff1>10&&diff2<10&&diff3<10
-                    ||diff1<10&&diff2>10&&diff3<10
-                    ||diff1<10&&diff2<10&&diff3>10) positiveCount++;
-        }
-        return positiveCount;
-    }
-
 
     //receive data from the accelerometer service
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

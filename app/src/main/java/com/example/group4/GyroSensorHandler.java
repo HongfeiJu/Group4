@@ -21,9 +21,9 @@ public class GyroSensorHandler extends Service implements SensorEventListener{
 
     private SensorManager manager;
     private Sensor senseGyro;
-    float gyroX[] = new float[128];
-    float gryoY[] = new float[128];
-    float gryoZ[] = new float[128];
+    float[] gyroX = new float[128];
+    float[] gryoY = new float[128];
+    float[] gryoZ = new float[128];
     int index = 0;
 
     Handler handler;
@@ -36,10 +36,10 @@ public class GyroSensorHandler extends Service implements SensorEventListener{
         //Log.i("info", "sensor type: " + mySensor.getName());
 
         if (mySensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            index++;
             gyroX[index] = sensorEvent.values[0];
             gryoY[index] = sensorEvent.values[1];
             gryoZ[index] = sensorEvent.values[2];
+            index++;
             //Log.d("info", "gyro data "+gyroX[index]+" "+gryoY[index]+" "+gryoZ[index]);
             if(index >= 127){
                 index = 0;
