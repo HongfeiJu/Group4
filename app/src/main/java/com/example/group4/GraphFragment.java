@@ -184,6 +184,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 for(float[] e: data){
                     Log.i("info", Arrays.toString(e));
                 }
+                speakText("data collected");
             }
         }, 9000);
     }
