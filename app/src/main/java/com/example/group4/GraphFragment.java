@@ -159,8 +159,35 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         super.onPause();
     }
 
-    public void returnResults() {
+    public void returnResults(Gestures g) {
+        double positive = 0;
+        double pcount = 0;
+        double fpositive = 0;
+        double fposrate = 0;
+        double posrate = 0;
+        Log.i("Trials:", trials.toString());
+        for(int i = 0; i < trials.size(); ++i) {
+            if(trials.get(i).first == g) {
+                pcount = pcount + 1;
+                if(trials.get(i).second == g) {
+                    positive = positive + 1;
+                }
+            } else {
+                if(trials.get(i).second == g) {
+                    fpositive = fpositive + 1;
+                }
+            }
+        }
 
+        fposrate = fpositive / (trials.size() - pcount);
+        posrate = positive / pcount;
+
+        Log.i("Pos", Double.toString(positive));
+        Log.i("pcount", Double.toString(pcount));
+        Log.i("fpos", Double.toString(fpositive));
+
+        result.setText("");
+        result.setText("True positive rate: "+Double.toString(posrate)+"\nFalse positive rate: "+Double.toString(fposrate));
     }
 
     @Override
@@ -179,10 +206,16 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 collectData(sensorData, Gestures.ABOUT);
                 break;
             case R.id.btn_cop_algorithm:
+                returnResults(Gestures.COP);
+                break;
             case R.id.btn_hungry_algorithm:
+                returnResults(Gestures.HUNGRY);
+                break;
             case R.id.btn_headache_algorithm:
+                returnResults(Gestures.HEAD);
+                break;
             case R.id.btn_about_algorithm:
-                returnResults();
+                returnResults(Gestures.ABOUT);
                 break;
 
             default:
@@ -209,7 +242,6 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
                 }
                 f.addAll(findFeatures.tagAllFeatures(targetData));
                 trials.add(new Pair<Gestures, Gestures>(gesture, classifier.classify(f)));
-                Log.i("Trials:", trials.toString());
             }
         }, 10000);
     }

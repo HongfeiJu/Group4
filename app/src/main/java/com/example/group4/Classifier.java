@@ -1,6 +1,7 @@
 package com.example.group4;
 
 import android.util.Log;
+import android.widget.HeaderViewListAdapter;
 
 import java.util.ArrayList;
 
@@ -115,25 +116,14 @@ public class Classifier {
         int hungryDistance = twoDDistance(features, hungryFeaturesList);
         int aboutDistance = twoDDistance(features, aboutFeaturesList);
 
-        Log.i("Distances", Integer.toString(copDistance));
-        Log.i("Distances", Integer.toString(headDistance));
-        Log.i("Distances", Integer.toString(hungryDistance));
-        Log.i("Distances", Integer.toString(aboutDistance));
 
-        if((copDistance < headDistance) &&
-                (copDistance < aboutDistance)) {
+        if(copDistance == (Math.min(copDistance, Math.min(headDistance, Math.min(hungryDistance, aboutDistance))))) {
             return Gestures.COP;
-        } else if ((headDistance < copDistance) &&
-                (headDistance < hungryDistance) &&
-                (headDistance < aboutDistance)) {
+        } else if (headDistance == (Math.min(copDistance, Math.min(headDistance, Math.min(hungryDistance, aboutDistance)))))  {
             return Gestures.HEAD;
-        } else if ((hungryDistance < copDistance) &&
-                (hungryDistance < headDistance) &&
-                (hungryDistance < aboutDistance)) {
+        } else if (hungryDistance == (Math.min(copDistance, Math.min(headDistance, Math.min(hungryDistance, aboutDistance))))){
             return Gestures.HUNGRY;
-        } else if ((aboutDistance < copDistance) &&
-                (aboutDistance < hungryDistance) &&
-                (aboutDistance < headDistance)) {
+        } else if (aboutDistance == (Math.min(copDistance, Math.min(headDistance, Math.min(hungryDistance, aboutDistance))))) {
             return Gestures.ABOUT;
         } else {
             return Gestures.NONE;
