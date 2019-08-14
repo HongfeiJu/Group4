@@ -223,9 +223,8 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
                     diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
             Log.i("info", diff1+":"+diff2+":"+diff3+":"+diff4+":"+diff5+":"+diff6);
-            if(diff1/diff2>2&&diff1/diff3>2&&diff1>10
-                    ||diff2/diff1>2&&diff2/diff3>2&&diff2>10
-                    ||diff3/diff1>2&&diff3/diff2>2&&diff3>10) positiveCount++;
+            if(diff4/diff5>1.5&&diff4/diff6>1.5&&diff4>5) continue;
+            if(diff3/diff1>1.5&&diff3/diff2>1.5&&diff3>5) positiveCount++;
         }
         return positiveCount;
     }
@@ -265,7 +264,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
             float diff1=max1-min1, diff2=max2-min2, diff3=max3-min3,
                     diff4=max4-min4, diff5=max5-min5, diff6=max6-min6;
             Log.i("info", diff1+":"+diff2+":"+diff3+":"+diff4+":"+diff5+":"+diff6);
-            if(diff4/diff5>1.5&&diff6/diff5>1.5&&diff4>10&&diff6>10) positiveCount++;
+            if(diff4/diff5>1.5&&diff4/diff6>1.5&&diff4>5) positiveCount++;
         }
         return positiveCount;
     }
