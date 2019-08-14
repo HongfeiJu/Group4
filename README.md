@@ -1,2 +1,2 @@
-# Group4
-CSE535 assignment
+# Android applcation for recognizing sign language
+current gestures include: cop, hungry, headache, about
