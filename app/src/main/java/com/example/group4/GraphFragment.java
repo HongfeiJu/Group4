@@ -4,11 +4,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.gesture.Gesture;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,10 +44,15 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     private TextToSpeech textToSpeech;
     private DataSmoother smoother = new DataSmoother();
     private final int num_sensor = 6;
+    private boolean inCollecting = false;
 	//create random, thread handler, and thread toggle boolean
     boolean running;
 
     Intent sersorIntent, gyroSensorIntent;
+
+    ArrayList<Pair<Gestures, Gestures>> trials;
+    FindFeatures findFeatures;
+    Classifier classifier;
 
 	//create graph fragment view
     @Override
@@ -132,6 +139,10 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         getActivity().startService(sersorIntent);
         getActivity().startService(gyroSensorIntent);
 
+        trials = new ArrayList<>();
+        findFeatures = new FindFeatures();
+        classifier = new Classifier();
+
         return view;
     }
 
@@ -148,19 +159,30 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         super.onPause();
     }
 
+    public void returnResults() {
+
+    }
+
     @Override
     public void onClick(View v) {
         switch(v.getId()) {
             case R.id.btn_cop_collect:
+                collectData(sensorData, Gestures.COP);
+                break;
             case R.id.btn_hungry_collect:
+                collectData(sensorData, Gestures.HUNGRY);
+                break;
             case R.id.btn_headache_collect:
+                collectData(sensorData, Gestures.HEAD);
+                break;
             case R.id.btn_about_collect:
-                collectData(sensorData);
+                collectData(sensorData, Gestures.ABOUT);
                 break;
             case R.id.btn_cop_algorithm:
             case R.id.btn_hungry_algorithm:
             case R.id.btn_headache_algorithm:
             case R.id.btn_about_algorithm:
+                returnResults();
                 break;
 
             default:
@@ -169,7 +191,7 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
     }
 
 
-    private void collectData(final ArrayList<ArrayList<Float>> targetData) {
+    private void collectData(final ArrayList<ArrayList<Float>> targetData, final Gestures gesture) {
         speakText("get ready in 3 second");
         (new Handler()).postDelayed(new Runnable() {
             public void run() {
@@ -178,13 +200,16 @@ public class GraphFragment extends Fragment implements View.OnClickListener {
         }, 5000);
         (new Handler()).postDelayed(new Runnable() {
             public void run() {
+                ArrayList<ArrayList<Features>> f = new ArrayList<>();
                 for(int i = 0; i < num_sensor; ++i) {
                     int len = dynamicData.get(i).size();
                     targetData.get(i).clear();
                     targetData.get(i).addAll(dynamicData.get(i).subList(Math.max(0, len - 50), len));
-                    smoother.smooth(targetData.get(i),3);
-                    Log.i("info:", targetData.get(i).toString());
+                    smoother.smooth(targetData.get(i),2);
                 }
+                f.addAll(findFeatures.tagAllFeatures(targetData));
+                trials.add(new Pair<Gestures, Gestures>(gesture, classifier.classify(f)));
+                Log.i("Trials:", trials.toString());
             }
         }, 10000);
     }

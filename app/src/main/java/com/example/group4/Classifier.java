@@ -1,5 +1,7 @@
 package com.example.group4;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 enum Gestures {
@@ -8,18 +10,49 @@ enum Gestures {
 
 public class Classifier {
 
-    private Features[][] copFeatures = { {} };
-    private Features[][] headFeatures = { {} };
-    private Features[][] hungryFeatures = { {} };
-    private Features[][] aboutFeatures = { {} };
+    private Features[][] copFeatures = {{Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK}, 
+            {Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}};
+    
+    private Features[][] headFeatures = {{Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}};
 
-    ArrayList<ArrayList<Features>> copFeaturesList;
-    ArrayList<ArrayList<Features>> headFeaturesList;
-    ArrayList<ArrayList<Features>> hungryFeaturesList;
-    ArrayList<ArrayList<Features>> aboutFeaturesList;
+
+    private Features[][] hungryFeatures = {{Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}, 
+            {Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}};
+
+    private Features[][] aboutFeatures = {{Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK},
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK}, 
+            {Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.INTERCEPT, Features.NPEAK}, 
+            {Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK}, 
+            {Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.PPEAK, Features.INTERCEPT, Features.NPEAK, Features.PPEAK, Features.NPEAK, Features.INTERCEPT, Features.INTERCEPT, Features.NPEAK, Features.INTERCEPT, Features.PPEAK}};
+
+
+    private ArrayList<ArrayList<Features>> copFeaturesList;
+    private ArrayList<ArrayList<Features>> headFeaturesList;
+    private ArrayList<ArrayList<Features>> hungryFeaturesList;
+    private ArrayList<ArrayList<Features>> aboutFeaturesList;
 
 
     public Classifier() {
+        copFeaturesList = new ArrayList<>();
+        headFeaturesList = new ArrayList<>();
+        hungryFeaturesList = new ArrayList<>();
+        aboutFeaturesList = new ArrayList<>();
+
+
         for(int i = 0; i < copFeatures.length; ++i) {
             copFeaturesList.add(new ArrayList<Features>());
             for(int k = 0; k < copFeatures[i].length; ++k) {
@@ -78,25 +111,29 @@ public class Classifier {
 
     public Gestures classify(ArrayList<ArrayList<Features>> features) {
         int copDistance = twoDDistance(features, copFeaturesList);
-        int headDitance = twoDDistance(features, headFeaturesList);
+        int headDistance = twoDDistance(features, headFeaturesList);
         int hungryDistance = twoDDistance(features, hungryFeaturesList);
         int aboutDistance = twoDDistance(features, aboutFeaturesList);
 
-        if((copDistance < headDitance) &&
-                (copDistance < hungryDistance) &&
+        Log.i("Distances", Integer.toString(copDistance));
+        Log.i("Distances", Integer.toString(headDistance));
+        Log.i("Distances", Integer.toString(hungryDistance));
+        Log.i("Distances", Integer.toString(aboutDistance));
+
+        if((copDistance < headDistance) &&
                 (copDistance < aboutDistance)) {
             return Gestures.COP;
-        } else if ((headDitance < copDistance) &&
-                (headDitance < hungryDistance) &&
-                (headDitance < aboutDistance)) {
+        } else if ((headDistance < copDistance) &&
+                (headDistance < hungryDistance) &&
+                (headDistance < aboutDistance)) {
             return Gestures.HEAD;
         } else if ((hungryDistance < copDistance) &&
-                (hungryDistance < headDitance) &&
+                (hungryDistance < headDistance) &&
                 (hungryDistance < aboutDistance)) {
             return Gestures.HUNGRY;
         } else if ((aboutDistance < copDistance) &&
                 (aboutDistance < hungryDistance) &&
-                (aboutDistance < headDitance)) {
+                (aboutDistance < headDistance)) {
             return Gestures.ABOUT;
         } else {
             return Gestures.NONE;
